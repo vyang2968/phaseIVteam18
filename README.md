@@ -11,12 +11,19 @@
 - Flask
 
 ### Database
-- NeonDB (Postgres)
+- NeonDB (PostgreSQL)
 
 ## Installation & Setup
 ### Frontend
 -  `npm install`
 
 ### Backend
+- Create / Activate your virtual enviroment
 - `pip install -r requirements.txt`
+
+## Running
+### Frontend
+
+### Backend
+- `python run.py` (make sure you're in server folder)
 
