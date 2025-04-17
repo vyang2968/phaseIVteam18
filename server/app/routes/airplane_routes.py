@@ -19,7 +19,7 @@ def get_airplanes():
     # error safety
     try:
         # Use RealDictCursor to get results as dictionaries
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor = connection.cursor(dictionary=True)
         cursor.execute("SELECT * FROM airplane")
         airplanes = cursor.fetchall()
 
@@ -52,7 +52,7 @@ def get_airplane(airlineid, tail_num):
         # tail_num = request.args.get("tail_num")
 
         # Use RealDictCursor to get results as dictionaries
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor = connection.cursor(dictionary=True)
 
         # here we're prone to something called SQL injection where someone can pass in a SQL command as an argument e.g. airlineID
         # cursor.execute(
@@ -114,8 +114,7 @@ def create_airplane(airlineid, tail_num):
         model = data.get("model")
         neo = data.get("neo")
         
-        # Use RealDictCursor to get results as dictionaries
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor = connection.cursor(dictionary=True)
         
         cursor.execute(
             """
@@ -146,13 +145,12 @@ def delete_airplane(airlineid, tail_num):
 
     # error safety
     try:
-        # Use RealDictCursor to get results as dictionaries
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor = connection.cursor(dictionary=True)
+        print(airlineid, tail_num)
         
-        ##
         cursor.execute(
             """
-                DELETE FROM airplanes
+                DELETE FROM airplane
                 WHERE airlineid = %s and tail_num = %s
             """,
             (airlineid, tail_num)

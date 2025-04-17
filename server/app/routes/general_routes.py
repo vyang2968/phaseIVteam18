@@ -1,40 +1,29 @@
 from flask import Blueprint, jsonify, request
-import psycopg2
-from psycopg2 import errors
-from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
 general_bp = Blueprint('general', __name__)
 
 @general_bp.route('/tables', methods=['GET'])
 def get_tables():
-    # attempts to connect to db server
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
 
-    # error safety
     try:
-        # Use RealDictCursor to get results as dictionaries
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
-        cursor.execute(
-          """
-          SELECT tablename
-          FROM pg_catalog.pg_tables
-          WHERE schemaname != 'pg_catalog' AND
-          schemaname != 'information_schema';
-          """
-        )
-        
-        tables = cursor.fetchall()
+        cursor = connection.cursor(dictionary=True)  # Return rows as dicts
 
-        # Convert rows to list of dicts for JSON serialization
-        result = [dict(airplane) for airplane in tables]
+        # MySQL query to get table names from current database
+        cursor.execute("SHOW TABLES")
 
-        # status 200 means good
-        return jsonify(result), 200
+        # Fetch all table rows
+        rows = cursor.fetchall()
+
+        # Each row is like: {'Tables_in_yourdatabase': 'tablename'}
+        # So we extract the table name from each dict value
+        tables = [list(row.values())[0] for row in rows]
+
+        return jsonify(tables), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        # Return connection to the pool
         release_db_connection(connection)

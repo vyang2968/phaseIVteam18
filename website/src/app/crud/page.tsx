@@ -14,132 +14,182 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { getTableNames, getTableData, deleteTableRow } from './_actions/actions' // Assume getTableData(tableName) is defined
+import { getTableNames, getTableData, deleteTableRow, createTableRow } from './_actions/actions'
 import DataTable from './components/data-table'
-import { DataType } from './utils/types'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { SchemaFor, schemaMap, TableName } from './utils/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import TableSkeleton from './components/data-table-skeleton'
+import { toast } from "sonner"
+import CreateDialog from './components/create-dialog'
 
 export default function Page() {
-  const [tableNames, setTableNames] = useState<string[] | null>(null)
-  const [activeTab, setActiveTab] = useState<string | null>(null)
-  const [tableDataMap, setTableDataMap] = useState<Record<string, DataType[]>>({})
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [tableNames, setTableNames] = useState<TableName[] | null>(null)
+  const [activeTab, setActiveTab] = useState<TableName | null>(null)
+  const [tableDataMap, setTableDataMap] = useState<
+    Partial<Record<TableName, SchemaFor<TableName>[]>>
+  >({})
+  const [actionLoading, setActionLoading] = useState<{ action: 'delete' | 'create' | 'edit', loading: boolean} | null>(null)
   const [tabLoading, setTabLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // 1) Fetch table names
   useEffect(() => {
-    async function fetchTableNames() {
+    const fetchNames = async () => {
       setTabLoading(true)
       try {
-        const names = await getTableNames()
+        // getTableNames returns string[], but we know they line up with TableName
+        const names = (await getTableNames()) as TableName[]
         setTableNames(names)
+        if (names.length > 0) {
+          setActiveTab(names[0])
+        }
       } catch (err) {
         console.error(err)
         setError('Failed to fetch table names')
-      }
-    }
-
-    fetchTableNames()
-  }, [])
-
-  useEffect(() => {
-    if (tableNames && tableNames.length > 0) {
-      setActiveTab(tableNames[1])
-    }
-  }, [tableNames])
-
-  // Fetch data when active tab changes with simulated delay
-  useEffect(() => {
-    if (!activeTab || tableDataMap[activeTab]) return // Already fetched
-    const fetchDataForTab = async () => {
-      try {
-        // Simulate network delay with setTimeout
-        const data = await getTableData(activeTab) // Replace with actual API call
-        setTableDataMap(prev => ({ ...prev, [activeTab]: data }))
-      } catch (err) {
-        console.error(`Failed to fetch data for ${activeTab}`, err)
       } finally {
         setTabLoading(false)
       }
     }
-    fetchDataForTab()
-  }, [activeTab, tableDataMap])
+    fetchNames()
+  }, [])
 
-  const handleDelete = async () => {
-    setDeleteLoading(true);
+  // 2) Fetch data when activeTab changes
+  useEffect(() => {
+    if (!activeTab) return;
+  
+    if (tableDataMap[activeTab]) return;
+  
+    const normalizeKeysToLowercase = (obj: Record<string, any>): Record<string, any> =>
+      Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => [
+          key.toLowerCase(),
+          value && typeof value === 'object' && !Array.isArray(value)
+            ? normalizeKeysToLowercase(value)
+            : value,
+        ])
+      );
+  
+    const fetchData = async () => {
+      setTabLoading(true);
+      try {
+        const data = await getTableData(activeTab);
+        const normalizedData = (data as any[]).map(normalizeKeysToLowercase);
+  
+        setTableDataMap(prev => ({
+          ...prev,
+          [activeTab]: normalizedData as SchemaFor<typeof activeTab>[],
+        }));
+      } catch (err) {
+        console.error(`Failed to fetch data for ${activeTab}`, err);
+      } finally {
+        setTabLoading(false);
+      }
+    };
+  
+    fetchData();
+  }, [activeTab, tableDataMap]);  
+  
 
+  // 3) Deletion handler that re-fetches current tab
+  const handleDelete = async (identifiers: Record<string, string>) => {
+    if (!activeTab) return
+
+    setActionLoading({ action: 'delete', loading: true })
     try {
-      const data = await deleteTableRow(activeTab ?? "", {});
-    } catch (error) {
+      if (!activeTab) {
+        throw new Error("No table present")
+      }
 
+      await deleteTableRow(activeTab, identifiers)
+      const fresh = await getTableData(activeTab)
+      setTableDataMap(prev => ({ ...prev, [activeTab]: fresh as SchemaFor<typeof activeTab>[] }))
+      toast.success(`Row deleted from ${activeTab}`)
+    } catch (err: any) {
+      toast.error(`Error deleting row`, {
+        description: err.message ?? "Something went wrong",
+      })
+    } finally {
+      setActionLoading({ action: 'delete', loading: false })
     }
-    setDeleteLoading(false);
+  }
+
+  const onSubmit = async (data: SchemaFor<TableName>) => {
+    if (!activeTab) return
+
+    console.log(data)
+    
+    setActionLoading({ action: "create", loading: true })
+    
+    try {
+      if (!activeTab) {
+        throw new Error("No table present")
+      }
+
+      await createTableRow(activeTab, data)
+      const fresh = await getTableData(activeTab)
+      setTableDataMap(prev => ({ ...prev, [activeTab]: fresh as SchemaFor<typeof activeTab>[] }))
+      toast.success(`Row created in ${activeTab}`)
+    } catch (err: any) {
+      toast.error(`Error creating row`, {
+        description: err.message ?? "Something went wrong",
+      })
+    } finally {
+      setActionLoading({ action: 'create', loading: false })
+    }
   }
 
   return (
     <div className="container mx-auto py-10">
       <Card>
         <CardHeader>
-          <div className='w-full flex justify-between'>
+          <div className='w-full flex justify-between items-center'>
             <div className='space-y-1'>
               <CardTitle>Data Dashboard</CardTitle>
               <CardDescription>View your data fetched from the database</CardDescription>
             </div>
-            <Button>
-              <Plus />
-              Create
-            </Button>
+
+            {activeTab && (
+              <CreateDialog
+                loading={actionLoading?.action == 'create' ? actionLoading.loading : false}
+                tableName={activeTab}
+                schema={schemaMap[activeTab]}
+                defaultValues={{locationid: null}}
+                onSubmit={onSubmit}
+              />
+            )}
           </div>
         </CardHeader>
+
         <CardContent>
-          <Tabs value={activeTab ?? undefined} onValueChange={setActiveTab}>
+          <Tabs value={activeTab ?? undefined} onValueChange={tab => setActiveTab(tab as TableName)}>
             <TabsList className="w-full">
-              <div className='w-full h-full flex gap-2 overflow-x-auto no-scrollbar'>
-                {/* Loading Skeleton for Tabs */}
-                {tabLoading ? (
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <Skeleton key={index} className="h-10 w-32 rounded-md" />
+              <div className='w-full flex gap-2 overflow-x-auto'>
+                {tabLoading || !tableNames
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-32 rounded-md" />
                   ))
-                ) : (
-                  tableNames?.map((value, index) => (
-                    <TabsTrigger
-                      key={`tab_trigger_${index}`}
-                      value={value}
-                      className="flex-shrink-0 px-8 py-2 whitespace-nowrap"
-                    >
-                      {value.includes('_')
-                        ? value
-                          .split('_')
-                          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                          .join(' ')
-                        : value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()}
+                  : tableNames.map(name => (
+                    <TabsTrigger key={name} value={name}>
+                      {name.replace(/(^|_)(\w)/g, (_, __, c) => ' ' + c.toUpperCase()).trim()}
                     </TabsTrigger>
                   ))
-                )}
+                }
               </div>
             </TabsList>
 
             <div className="mt-6">
-              {tabLoading ? (
-                <TableSkeleton />
-              ) : (
-                tableNames?.map((value, index) => (
-                  <TabsContent
-                    key={`tab_content_${index}`}
-                    value={value}
-                    className="flex-shrink-0 px-8 py-2 whitespace-nowrap"
-                  >
+              {tabLoading
+                ? <TableSkeleton />
+                : tableNames?.map(name => (
+                  <TabsContent key={name} value={name}>
                     <DataTable
-                      caption={`${(tableDataMap[value] ?? []).length} records`}
-                      data={tableDataMap[value] ?? []}
-                      onDelete={() => console.log("delete")}
+                      activeTab={name}
+                      data={tableDataMap[name] ?? []}
+                      onDelete={handleDelete}
                     />
                   </TabsContent>
                 ))
-              )}
+              }
             </div>
           </Tabs>
         </CardContent>

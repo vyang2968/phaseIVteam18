@@ -17,31 +17,33 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
-import { DataType } from '../utils/types'
 import DeleteDialog from "../components/delete-dialog"
+import { Airline, Airplane, SchemaFor, TableName } from "../utils/types"
 
 
 type DataTableProps = {
-  caption: string;
-  data: DataType[];
-  onDelete?: (id: string) => void;
+  activeTab: string;
+  data: SchemaFor<TableName>[];
+  onDelete: (identifiers: Record<string, string>) => void;
 }
 
-export default function DataTable({ caption, data, onDelete }: DataTableProps) {
+export default function DataTable({ data, activeTab, onDelete }: DataTableProps) {
+
   return (
     <Table>
-      <TableCaption>{caption}</TableCaption>
+      <TableCaption>{`${(data ?? []).length} records`}</TableCaption>
       <TableHeader>
         {data.length > 0 && (
           <TableRow>
             {Object.keys(data[0]).map((key) => (
-              <TableHead key={key}>
+              <TableHead key={key.toLowerCase()}>
                 {key.includes('_')
                   ? key
+                    .toLowerCase()
                     .split('_')
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                     .join(' ')
-                  : key.charAt(0).toUpperCase() + key.slice(1)}
+                  : key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()}
               </TableHead>
             ))}
             <TableHead>Actions</TableHead>
@@ -59,16 +61,16 @@ export default function DataTable({ caption, data, onDelete }: DataTableProps) {
         ) : (
           data.map((row, rowIndex) => (
             <TableRow key={rowIndex}>
-              {Object.keys(row).map((key) => (
-                <TableCell key={key}>
-                  {(() => {
-                    const value = row[key as keyof typeof row];
-                    return typeof value === 'object' && value !== null
+              {Object.entries(row).map(([key, value]) => {
+                const lowerKey = key.toLowerCase();
+                return (
+                  <TableCell key={lowerKey}>
+                    {typeof value === 'object' && value !== null
                       ? JSON.stringify(value)
-                      : String(value);
-                  })()}
-                </TableCell>
-              ))}
+                      : String(value)}
+                  </TableCell>
+                );
+              })}
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -92,7 +94,29 @@ export default function DataTable({ caption, data, onDelete }: DataTableProps) {
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                      <DeleteDialog onConfirm={() => console.log("confim")}/>
+                    <DeleteDialog
+                      onConfirm={() => {
+                        let identifiers: Record<string, string>
+                        switch (activeTab) {
+                          case 'airline':
+                            identifiers = {
+                              airlineid: (row as Airline).airlineid
+                            }
+                            console.log(identifiers)
+                            break;
+                          case 'airplane':
+                            identifiers = {
+                              airlineid: (row as Airplane).airlineid,
+                              tail_num: (row as Airplane).tail_num
+                            }
+                            break;
+                          default:
+                            identifiers = {}
+                            break;
+                        }
+                        onDelete(identifiers)
+                      }}
+                    />
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
