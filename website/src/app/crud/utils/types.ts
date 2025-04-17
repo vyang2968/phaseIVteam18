@@ -1,8 +1,8 @@
 import { z } from "zod"
 
 export const AirlineSchema = z.object({
-  airlineid: z.string(),
-  revenue: z.number()
+  airlineid: z.string().min(1, { message: "Required" }),
+  revenue: z.number().min(1)
 })
 
 export const AirplaneSchema = z.object({
@@ -17,14 +17,6 @@ export const AirplaneSchema = z.object({
   neo: z.boolean().optional(),
 }).superRefine((data, ctx) => {
   if (data.plane_type === 'Boeing') {
-    if (!data.maintenanced) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Maintenanced is required for Boeing',
-        path: ['maintenanced'],
-      })
-    }
-
     if (!data.model) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -43,13 +35,80 @@ export const AirplaneSchema = z.object({
   }
 })
 
+export const AirportSchema = z.object({
+
+})
+ 
+export const FlightSchema = z.object({
+
+})
+ 
+export const LegSchema = z.object({
+
+})
+ 
+export const LocationSchema = z.object({
+
+})
+ 
+export const PassengerSchema = z.object({
+
+})
+ 
+export const PassengerVacationsSchema = z.object({
+
+})
+ 
+export const PersonSchema = z.object({
+
+})
+ 
+export const PilotSchema = z.object({
+
+})
+ 
+export const PilotLicensesSchema = z.object({
+
+})
+ 
+export const RouteSchema = z.object({
+
+})
+
+export const RoutePathSchema = z.object({
+
+})
+ 
 export type Airline = z.infer<typeof AirlineSchema>
 export type Airplane = z.infer<typeof AirplaneSchema>
 
-export const schemaMap = {
+export const tableSchemaMap = {
   airline: AirlineSchema,
-  airplane: AirplaneSchema
+  airplane: AirplaneSchema,
+  airport: AirportSchema,
+  flight: FlightSchema,
+  leg: LegSchema,
+  location: LocationSchema,
+  passenger: PassengerSchema,
+  passenger_vacations: PassengerVacationsSchema,
+  person: PersonSchema,
+  pilot: PilotSchema, 
+  pilot_licenses: PilotLicensesSchema,
+  route: RouteSchema,
+  route_path: RoutePathSchema
 } as const
-export type SchemaFor<T extends TableName> = z.infer<(typeof schemaMap)[T]>
+export type TableSchemaFor<T extends TableName> = z.infer<(typeof tableSchemaMap)[T]>
 
-export type TableName = 'airline' | 'airplane'
+export type TableName = 
+  'airline' | 
+  'airplane' | 
+  'flight' |
+  'leg' |
+  'location' |
+  'passenger' |
+  'passenger_vacations' |
+  'person' |
+  'pilot' |
+  'pilot_licenses' |
+  'route' |
+  'route_path'

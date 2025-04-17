@@ -17,17 +17,19 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
-import DeleteDialog from "../components/delete-dialog"
-import { Airline, Airplane, SchemaFor, TableName } from "../utils/types"
+import DeleteDialog from "../app/crud/components/delete-dialog"
+import { Airline, Airplane, TableSchemaFor, TableName } from "../app/crud/utils/types"
+import { ViewName, ViewSchemaFor } from "@/app/views/types"
 
 
 type DataTableProps = {
   activeTab: string;
-  data: SchemaFor<TableName>[];
-  onDelete: (identifiers: Record<string, string>) => void;
+  data: TableSchemaFor<TableName>[] | ViewSchemaFor<ViewName>[];
+  actionsEnabled: boolean
+  onDelete?: (identifiers: Record<string, string>) => void;
 }
 
-export default function DataTable({ data, activeTab, onDelete }: DataTableProps) {
+export default function DataTable({ data, activeTab, onDelete, actionsEnabled }: DataTableProps) {
 
   return (
     <Table>
@@ -46,7 +48,7 @@ export default function DataTable({ data, activeTab, onDelete }: DataTableProps)
                   : key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()}
               </TableHead>
             ))}
-            <TableHead>Actions</TableHead>
+            {actionsEnabled && <TableHead>Actions</TableHead>}
           </TableRow>
         )}
       </TableHeader>
@@ -71,7 +73,7 @@ export default function DataTable({ data, activeTab, onDelete }: DataTableProps)
                   </TableCell>
                 );
               })}
-              <TableCell>
+              {(actionsEnabled && onDelete) && <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -119,7 +121,7 @@ export default function DataTable({ data, activeTab, onDelete }: DataTableProps)
                     />
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </TableCell>
+              </TableCell>}
             </TableRow>
           ))
         )}

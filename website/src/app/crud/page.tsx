@@ -15,10 +15,10 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { getTableNames, getTableData, deleteTableRow, createTableRow } from './_actions/actions'
-import DataTable from './components/data-table'
-import { SchemaFor, schemaMap, TableName } from './utils/types'
+import DataTable from '../../components/data-table'
+import { TableSchemaFor, tableSchemaMap, TableName } from './utils/types'
 import { Skeleton } from '@/components/ui/skeleton'
-import TableSkeleton from './components/data-table-skeleton'
+import TableSkeleton from '../../components/data-table-skeleton'
 import { toast } from "sonner"
 import CreateDialog from './components/create-dialog'
 
@@ -26,7 +26,7 @@ export default function Page() {
   const [tableNames, setTableNames] = useState<TableName[] | null>(null)
   const [activeTab, setActiveTab] = useState<TableName | null>(null)
   const [tableDataMap, setTableDataMap] = useState<
-    Partial<Record<TableName, SchemaFor<TableName>[]>>
+    Partial<Record<TableName, TableSchemaFor<TableName>[]>>
   >({})
   const [actionLoading, setActionLoading] = useState<{ action: 'delete' | 'create' | 'edit', loading: boolean} | null>(null)
   const [tabLoading, setTabLoading] = useState(false)
@@ -77,7 +77,7 @@ export default function Page() {
   
         setTableDataMap(prev => ({
           ...prev,
-          [activeTab]: normalizedData as SchemaFor<typeof activeTab>[],
+          [activeTab]: normalizedData as TableSchemaFor<typeof activeTab>[],
         }));
       } catch (err) {
         console.error(`Failed to fetch data for ${activeTab}`, err);
@@ -102,7 +102,7 @@ export default function Page() {
 
       await deleteTableRow(activeTab, identifiers)
       const fresh = await getTableData(activeTab)
-      setTableDataMap(prev => ({ ...prev, [activeTab]: fresh as SchemaFor<typeof activeTab>[] }))
+      setTableDataMap(prev => ({ ...prev, [activeTab]: fresh as TableSchemaFor<typeof activeTab>[] }))
       toast.success(`Row deleted from ${activeTab}`)
     } catch (err: any) {
       toast.error(`Error deleting row`, {
@@ -113,7 +113,7 @@ export default function Page() {
     }
   }
 
-  const onSubmit = async (data: SchemaFor<TableName>) => {
+  const onSubmit = async (data: TableSchemaFor<TableName>) => {
     if (!activeTab) return
 
     console.log(data)
@@ -127,7 +127,7 @@ export default function Page() {
 
       await createTableRow(activeTab, data)
       const fresh = await getTableData(activeTab)
-      setTableDataMap(prev => ({ ...prev, [activeTab]: fresh as SchemaFor<typeof activeTab>[] }))
+      setTableDataMap(prev => ({ ...prev, [activeTab]: fresh as TableSchemaFor<typeof activeTab>[] }))
       toast.success(`Row created in ${activeTab}`)
     } catch (err: any) {
       toast.error(`Error creating row`, {
@@ -144,15 +144,15 @@ export default function Page() {
         <CardHeader>
           <div className='w-full flex justify-between items-center'>
             <div className='space-y-1'>
-              <CardTitle>Data Dashboard</CardTitle>
-              <CardDescription>View your data fetched from the database</CardDescription>
+              <CardTitle>CRUD Dashboard</CardTitle>
+              <CardDescription>Create, read, update, and delete data from your database</CardDescription>
             </div>
 
             {activeTab && (
               <CreateDialog
                 loading={actionLoading?.action == 'create' ? actionLoading.loading : false}
                 tableName={activeTab}
-                schema={schemaMap[activeTab]}
+                schema={tableSchemaMap[activeTab]}
                 defaultValues={{locationid: null}}
                 onSubmit={onSubmit}
               />
@@ -162,11 +162,11 @@ export default function Page() {
 
         <CardContent>
           <Tabs value={activeTab ?? undefined} onValueChange={tab => setActiveTab(tab as TableName)}>
-            <TabsList className="w-full">
-              <div className='w-full flex gap-2 overflow-x-auto'>
+            <TabsList className="w-full h-max">
+              <div className='w-full h-max py-1 flex gap-2 overflow-x-auto'>
                 {tabLoading || !tableNames
                   ? Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-10 w-32 rounded-md" />
+                    <Skeleton key={i} className="h-5 w-32 rounded-md" />
                   ))
                   : tableNames.map(name => (
                     <TabsTrigger key={name} value={name}>
@@ -183,6 +183,7 @@ export default function Page() {
                 : tableNames?.map(name => (
                   <TabsContent key={name} value={name}>
                     <DataTable
+                      actionsEnabled
                       activeTab={name}
                       data={tableDataMap[name] ?? []}
                       onDelete={handleDelete}

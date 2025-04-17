@@ -1,12 +1,8 @@
 'use server';
 
+import { tableNameToRoute } from "@/lib/routes";
 import { idsFor } from "../utils/ids";
 import { SchemaFor, TableName } from "../utils/types";
-
-const tableNameToRoute: Record<string, string> = {
-  airplane: "/airplanes",
-  airline: "/airlines"
-}
 
 export async function getTableNames(): Promise<string[]> {
   try {
