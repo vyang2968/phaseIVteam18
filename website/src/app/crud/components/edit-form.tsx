@@ -44,21 +44,28 @@ import {
 } from '@/components/ui/form'
 import { Spinner } from '@/components/ui/spinner'
 import { TableName } from '../utils/types'
-import { useEffect } from 'react'
+import { useContext, useEffect } from 'react'
+import { CreateEditContext } from '../page'
 
-type CreateFormProps<T extends ZodObject<any> | ZodEffects<ZodObject<any>>> = {
-  schema: T
-  defaultValues?: Partial<z.infer<T>>
-  loading: boolean
+type EditFormProps<T extends ZodObject<any> | ZodEffects<ZodObject<any>>> = {
+  values: Partial<z.infer<T>>
   onSubmit: (data: z.infer<T>) => void
 }
 
-export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObject<any>>>({
-  schema,
-  defaultValues,
-  loading,
+export default function EditForm<T extends ZodObject<any> | ZodEffects<ZodObject<any>>>({
+  values,
   onSubmit,
-}: CreateFormProps<T>) {
+}: EditFormProps<T>) {
+  const context = useContext(CreateEditContext);
+  
+  if (!context) {
+    console.error("CreateEditContext is null in EditForm");
+    return <div>Loading schema...</div>;
+  }
+  
+  const schema = context.schema as T;
+  const loading = context.loading;
+
   const unwrappedSchema =
     schema instanceof z.ZodEffects ? schema._def.schema : schema;
   const shape = (unwrappedSchema as z.ZodObject<any>).shape;
@@ -67,7 +74,7 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
   for (const [key, def] of Object.entries(shape)) {
     const defAny = def as any
     const coreDef = defAny._def?.innerType ?? def
-    const userDefault = defaultValues?.[key as keyof typeof defaultValues]
+    const userDefault = values?.[key as keyof typeof values]
 
     let fallback: any = ''
     if (coreDef instanceof ZodBoolean) fallback = false
@@ -81,7 +88,7 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
 
   const formConfig: UseFormProps<z.infer<T>> = {
     resolver: zodResolver(schema),
-    defaultValues: finalDefaults,
+    defaultValues: values,
   }
 
   const form = useForm<z.infer<T>>(formConfig)
@@ -110,9 +117,17 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
     }
   }, [planeType, model])
 
+  const submit = (data: z.infer<T>) => {
+
+    if (form.formState.isDirty) {
+      console.log("SUBMKTTING")
+      // onSubmit(data)
+    }
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(submit)} className="space-y-6">
         {Object.entries(shape).map(([key, def]) => {
           const defAny = def as any
           const coreDef = defAny._def?.innerType ?? def
@@ -275,7 +290,7 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
           return null
         })}
         <Button type="submit">
-          Create
+          Save
           {loading && <Spinner className='animate-spin text-white' size="small" />}
         </Button>
       </form>

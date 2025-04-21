@@ -5,6 +5,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } 
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import CreateForm from './create-form'
+import { useState } from 'react'
 
 interface CreateDialogProps<T extends ZodObject<any> | ZodEffects<ZodObject<any>>> {
   tableName: string
@@ -21,8 +22,26 @@ export default function CreateDialog<T extends ZodObject<any> | ZodEffects<ZodOb
   defaultValues,
   onSubmit,
 }: CreateDialogProps<T>) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleDialogClose = () => {
+    setIsOpen(false)
+  }
+
+  const handleDialogOpen = () => {
+    setIsOpen(true)
+  }
+
+  // Handle the onSubmit function to close the dialog once loading is done
+  const handleSubmit = (data: z.infer<T>) => {
+    onSubmit(data)
+    if (!loading) {
+      handleDialogClose()
+    }
+  }
+  
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus />
@@ -40,7 +59,7 @@ export default function CreateDialog<T extends ZodObject<any> | ZodEffects<ZodOb
           schema={schema}
           loading={loading}
           defaultValues={defaultValues}
-          onSubmit={onSubmit}
+          onSubmit={handleSubmit}
         />
       </DialogContent>
     </Dialog>

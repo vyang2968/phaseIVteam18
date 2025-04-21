@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 import {
   Tabs,
   TabsContent,
@@ -21,6 +21,17 @@ import { Skeleton } from '@/components/ui/skeleton'
 import TableSkeleton from '../../components/data-table-skeleton'
 import { toast } from "sonner"
 import CreateDialog from './components/create-dialog'
+import { z } from 'zod'
+
+
+export const CreateEditContext =
+  createContext<{
+    schema: z.ZodObject<any> | z.ZodEffects<z.ZodObject<any>>
+    loading: {
+      action: 'delete' | 'create' | 'edit'
+      loading: boolean
+    } | null
+  } | null>(null)
 
 export default function Page() {
   const [tableNames, setTableNames] = useState<TableName[] | null>(null)
@@ -28,16 +39,24 @@ export default function Page() {
   const [tableDataMap, setTableDataMap] = useState<
     Partial<Record<TableName, TableSchemaFor<TableName>[]>>
   >({})
-  const [actionLoading, setActionLoading] = useState<{ action: 'delete' | 'create' | 'edit', loading: boolean} | null>(null)
+  const [actionLoading, setActionLoading] = useState<{ action: 'delete' | 'create' | 'edit', loading: boolean } | null>(null)
   const [tabLoading, setTabLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // 1) Fetch table names
+  const normalizeKeysToLowercase = (obj: Record<string, any>): Record<string, any> =>
+    Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [
+        key.toLowerCase(),
+        value && typeof value === 'object' && !Array.isArray(value)
+          ? normalizeKeysToLowercase(value)
+          : value,
+      ])
+    );
+
   useEffect(() => {
     const fetchNames = async () => {
       setTabLoading(true)
       try {
-        // getTableNames returns string[], but we know they line up with TableName
         const names = (await getTableNames()) as TableName[]
         setTableNames(names)
         if (names.length > 0) {
@@ -53,28 +72,17 @@ export default function Page() {
     fetchNames()
   }, [])
 
-  // 2) Fetch data when activeTab changes
   useEffect(() => {
     if (!activeTab) return;
-  
+
     if (tableDataMap[activeTab]) return;
-  
-    const normalizeKeysToLowercase = (obj: Record<string, any>): Record<string, any> =>
-      Object.fromEntries(
-        Object.entries(obj).map(([key, value]) => [
-          key.toLowerCase(),
-          value && typeof value === 'object' && !Array.isArray(value)
-            ? normalizeKeysToLowercase(value)
-            : value,
-        ])
-      );
-  
+
     const fetchData = async () => {
       setTabLoading(true);
       try {
         const data = await getTableData(activeTab);
         const normalizedData = (data as any[]).map(normalizeKeysToLowercase);
-  
+
         setTableDataMap(prev => ({
           ...prev,
           [activeTab]: normalizedData as TableSchemaFor<typeof activeTab>[],
@@ -85,12 +93,11 @@ export default function Page() {
         setTabLoading(false);
       }
     };
-  
-    fetchData();
-  }, [activeTab, tableDataMap]);  
-  
 
-  // 3) Deletion handler that re-fetches current tab
+    fetchData();
+  }, [activeTab, tableDataMap]);
+
+
   const handleDelete = async (identifiers: Record<string, string>) => {
     if (!activeTab) return
 
@@ -102,7 +109,8 @@ export default function Page() {
 
       await deleteTableRow(activeTab, identifiers)
       const fresh = await getTableData(activeTab)
-      setTableDataMap(prev => ({ ...prev, [activeTab]: fresh as TableSchemaFor<typeof activeTab>[] }))
+      const normalizedData = (fresh as any[]).map(normalizeKeysToLowercase);
+      setTableDataMap(prev => ({ ...prev, [activeTab]: normalizedData as TableSchemaFor<typeof activeTab>[] }))
       toast.success(`Row deleted from ${activeTab}`)
     } catch (err: any) {
       toast.error(`Error deleting row`, {
@@ -117,9 +125,9 @@ export default function Page() {
     if (!activeTab) return
 
     console.log(data)
-    
+
     setActionLoading({ action: "create", loading: true })
-    
+
     try {
       if (!activeTab) {
         throw new Error("No table present")
@@ -127,7 +135,8 @@ export default function Page() {
 
       await createTableRow(activeTab, data)
       const fresh = await getTableData(activeTab)
-      setTableDataMap(prev => ({ ...prev, [activeTab]: fresh as TableSchemaFor<typeof activeTab>[] }))
+      const normalizedData = (fresh as any[]).map(normalizeKeysToLowercase);
+      setTableDataMap(prev => ({ ...prev, [activeTab]: normalizedData as TableSchemaFor<typeof activeTab>[] }))
       toast.success(`Row created in ${activeTab}`)
     } catch (err: any) {
       toast.error(`Error creating row`, {
@@ -139,62 +148,69 @@ export default function Page() {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <Card>
-        <CardHeader>
-          <div className='w-full flex justify-between items-center'>
-            <div className='space-y-1'>
-              <CardTitle>CRUD Dashboard</CardTitle>
-              <CardDescription>Create, read, update, and delete data from your database</CardDescription>
+    <CreateEditContext.Provider
+      value={activeTab ? {
+        schema: tableSchemaMap[activeTab],
+        loading: actionLoading
+      } : null}
+    >
+      <div className="container mx-auto py-10">
+        <Card>
+          <CardHeader>
+            <div className='w-full flex justify-between items-center'>
+              <div className='space-y-1'>
+                <CardTitle>CRUD Dashboard</CardTitle>
+                <CardDescription>Create, read, update, and delete data from your database</CardDescription>
+              </div>
+
+              {activeTab && (
+                <CreateDialog
+                  loading={actionLoading?.action == 'create' ? actionLoading.loading : false}
+                  tableName={activeTab}
+                  schema={tableSchemaMap[activeTab]}
+                  defaultValues={{ locationid: null }}
+                  onSubmit={onSubmit}
+                />
+              )}
             </div>
+          </CardHeader>
 
-            {activeTab && (
-              <CreateDialog
-                loading={actionLoading?.action == 'create' ? actionLoading.loading : false}
-                tableName={activeTab}
-                schema={tableSchemaMap[activeTab]}
-                defaultValues={{locationid: null}}
-                onSubmit={onSubmit}
-              />
-            )}
-          </div>
-        </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab ?? undefined} onValueChange={tab => setActiveTab(tab as TableName)}>
+              <TabsList className="w-full h-max">
+                <div className='w-full h-max py-1 flex gap-2 overflow-x-auto'>
+                  {tabLoading || !tableNames
+                    ? Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-5 w-32 rounded-md" />
+                    ))
+                    : tableNames.map(name => (
+                      <TabsTrigger key={name} value={name}>
+                        {name.replace(/(^|_)(\w)/g, (_, __, c) => ' ' + c.toUpperCase()).trim()}
+                      </TabsTrigger>
+                    ))
+                  }
+                </div>
+              </TabsList>
 
-        <CardContent>
-          <Tabs value={activeTab ?? undefined} onValueChange={tab => setActiveTab(tab as TableName)}>
-            <TabsList className="w-full h-max">
-              <div className='w-full h-max py-1 flex gap-2 overflow-x-auto'>
-                {tabLoading || !tableNames
-                  ? Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-5 w-32 rounded-md" />
-                  ))
-                  : tableNames.map(name => (
-                    <TabsTrigger key={name} value={name}>
-                      {name.replace(/(^|_)(\w)/g, (_, __, c) => ' ' + c.toUpperCase()).trim()}
-                    </TabsTrigger>
+              <div className="mt-6">
+                {tabLoading
+                  ? <TableSkeleton />
+                  : tableNames?.map(name => (
+                    <TabsContent key={name} value={name}>
+                      <DataTable
+                        actionsEnabled
+                        activeTab={name}
+                        data={tableDataMap[name] ?? []}
+                        onDelete={handleDelete}
+                      />
+                    </TabsContent>
                   ))
                 }
               </div>
-            </TabsList>
-
-            <div className="mt-6">
-              {tabLoading
-                ? <TableSkeleton />
-                : tableNames?.map(name => (
-                  <TabsContent key={name} value={name}>
-                    <DataTable
-                      actionsEnabled
-                      activeTab={name}
-                      data={tableDataMap[name] ?? []}
-                      onDelete={handleDelete}
-                    />
-                  </TabsContent>
-                ))
-              }
-            </div>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </CreateEditContext.Provider>
   )
 }

@@ -20,7 +20,8 @@ import { MoreHorizontal } from "lucide-react"
 import DeleteDialog from "../app/crud/components/delete-dialog"
 import { Airline, Airplane, TableSchemaFor, TableName } from "../app/crud/utils/types"
 import { ViewName, ViewSchemaFor } from "@/app/views/types"
-
+import { createContext, useContext, useState } from "react"
+import ActionsDropdown from "./actions-dropdown"
 
 type DataTableProps = {
   activeTab: string;
@@ -30,7 +31,6 @@ type DataTableProps = {
 }
 
 export default function DataTable({ data, activeTab, onDelete, actionsEnabled }: DataTableProps) {
-
   return (
     <Table>
       <TableCaption>{`${(data ?? []).length} records`}</TableCaption>
@@ -74,53 +74,11 @@ export default function DataTable({ data, activeTab, onDelete, actionsEnabled }:
                 );
               })}
               {(actionsEnabled && onDelete) && <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        navigator.clipboard.writeText(Object.values(row).join(', '))
-                      }
-                    >
-                      Copy
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DeleteDialog
-                      onConfirm={() => {
-                        let identifiers: Record<string, string>
-                        switch (activeTab) {
-                          case 'airline':
-                            identifiers = {
-                              airlineid: (row as Airline).airlineid
-                            }
-                            console.log(identifiers)
-                            break;
-                          case 'airplane':
-                            identifiers = {
-                              airlineid: (row as Airplane).airlineid,
-                              tail_num: (row as Airplane).tail_num
-                            }
-                            break;
-                          default:
-                            identifiers = {}
-                            break;
-                        }
-                        onDelete(identifiers)
-                      }}
-                    />
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  <ActionsDropdown 
+                    row={row as TableSchemaFor<TableName>}
+                    activeTab={activeTab}
+                    onDelete={onDelete}
+                  />
               </TableCell>}
             </TableRow>
           ))

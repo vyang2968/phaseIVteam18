@@ -2,7 +2,7 @@
 
 import { tableNameToRoute } from "@/lib/routes";
 import { idsFor } from "../utils/ids";
-import { SchemaFor, TableName } from "../utils/types";
+import { TableSchemaFor, TableName } from "../utils/types";
 
 export async function getTableNames(): Promise<string[]> {
   try {
@@ -45,6 +45,7 @@ export async function getTableData(tableName: string): Promise<any[]> {
 }
 
 export async function deleteTableRow(tableName: string, identifier: Record<string, string>) {
+  console.log(identifier)
   try {
     const route = tableNameToRoute[tableName];
 
@@ -81,7 +82,7 @@ export async function deleteTableRow(tableName: string, identifier: Record<strin
   }
 }
 
-export async function createTableRow(tableName: string, data: SchemaFor<TableName>) {
+export async function createTableRow(tableName: string, data: TableSchemaFor<TableName>) {
   try {
     const route = tableNameToRoute[tableName];
 
