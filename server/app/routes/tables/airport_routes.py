@@ -2,10 +2,10 @@ from flask import Blueprint, jsonify, request
 from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
-airline_bp = Blueprint('airport', __name__)
+airport_bp = Blueprint('airport', __name__)
 
 # Get all airports
-@airline_bp.route('/airports', methods=['GET'])
+@airport_bp.route('/airports', methods=['GET'])
 def get_airlines():
     connection = get_db_connection()
     if connection is None:
@@ -21,7 +21,7 @@ def get_airlines():
         release_db_connection(connection)
 
 # Get one airport
-@airline_bp.route('/airports/<string:airportID>', methods=['GET'])
+@airport_bp.route('/airports/<string:airportID>', methods=['GET'])
 def get_airline(airportID):
     connection = get_db_connection()
     if connection is None:
@@ -40,7 +40,7 @@ def get_airline(airportID):
 
 # Create airport
 # INSERT INTO airport (airportID, airport_name, city, state, country, locationID) VALUES
-@airline_bp.route('/airports/<string:airportID>', methods=['POST'])
+@airport_bp.route('/airports/<string:airportID>', methods=['POST'])
 def create_airline(airportID):
     connection = get_db_connection()
     if connection is None:
@@ -70,7 +70,7 @@ def create_airline(airportID):
         release_db_connection(connection)
 
 # Delete airline
-@airline_bp.route('/airlines/<string:airlineid>', methods=['DELETE'])
+@airport_bp.route('/airlines/<string:airlineid>', methods=['DELETE'])
 def delete_airline(airlineid):
     connection = get_db_connection()
     if connection is None:

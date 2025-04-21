@@ -31,6 +31,7 @@ Clone this repository and open it
   - Click `Add Account`
     - Login Name: `python`
     - Limit to Hosts Matching: `localhost`
+    - Administrative roles: DBA
 - Make sure database instance running on port 3306
 
 ## Running
