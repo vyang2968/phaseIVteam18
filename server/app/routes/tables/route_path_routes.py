@@ -2,8 +2,10 @@ from flask import Blueprint, jsonify, request
 from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
+route_path_bp = Blueprint('route_path', __name__)
+
 # Get all route_paths
-@airline_bp.route('/route_paths', methods=['GET'])
+@route_path_bp.route('/route_paths', methods=['GET'])
 def get_route_paths():
     connection = get_db_connection()
     if connection is None:
@@ -19,7 +21,7 @@ def get_route_paths():
           release_db_connection(connection)
 
 # Get one route_path
-@airline_bp.route('/route_paths/<string:routeID>/<string:legID>', methods=['GET'])
+@route_path_bp.route('/route_paths/<string:routeID>/<string:legID>', methods=['GET'])
 def get_route_path(routeID, legID):
     connection = get_db_connection()
     if connection is None:
@@ -37,7 +39,7 @@ def get_route_path(routeID, legID):
         release_db_connection(connection)
 
 # Create route_path
-@airline_bp.route('/route_paths/<string:routeID>/<string:legID>', methods=['POST'])
+@route_path_bp.route('/route_paths/<string:routeID>/<string:legID>', methods=['POST'])
 def create_route_path(routeID, legID):
     connection = get_db_connection()
     if connection is None:
@@ -64,7 +66,7 @@ def create_route_path(routeID, legID):
   
 
 # Delete route_path
-@airline_bp.route('/route_path/<string:routeID>/<string:legID>', methods=['DELETE'])
+@route_path_bp.route('/route_path/<string:routeID>/<string:legID>', methods=['DELETE'])
 def delete_route_path(routeID, legID):
     connection = get_db_connection()
     if connection is None:

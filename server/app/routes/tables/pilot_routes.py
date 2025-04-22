@@ -2,8 +2,10 @@ from flask import Blueprint, jsonify, request
 from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
+pilot_bp = Blueprint('pilot', __name__)
+
 # Get all pilots
-@airline_bp.route('/pilots', methods=['GET'])
+@pilot_bp.route('/pilots', methods=['GET'])
 def get_pilots():
     connection = get_db_connection()
     if connection is None:
@@ -19,7 +21,7 @@ def get_pilots():
           release_db_connection(connection)
 
 # Get one pilot
-@airline_bp.route('/pilots/<string:personID>', methods=['GET'])
+@pilot_bp.route('/pilots/<string:personID>', methods=['GET'])
 def get_pilot(personID):
     connection = get_db_connection()
     if connection is None:
@@ -37,7 +39,7 @@ def get_pilot(personID):
         release_db_connection(connection)
   
 # Create pilot
-@airline_bp.route('/pilots/<string:personID>', methods=['POST'])
+@pilot_bp.route('/pilots/<string:personID>', methods=['POST'])
 def create_pilot(personID):
     connection = get_db_connection()
     if connection is None:
@@ -63,7 +65,7 @@ def create_pilot(personID):
   
 
 # Delete pilot
-@airline_bp.route('/pilot/<string:personID>', methods=['DELETE'])
+@pilot_bp.route('/pilot/<string:personID>', methods=['DELETE'])
 def delete_pilot(personID):
     connection = get_db_connection()
     if connection is None:
