@@ -2,8 +2,10 @@ from flask import Blueprint, jsonify, request
 from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
+leg_bp = Blueprint('leg', __name__)
+
 # Get all legs
-@airline_bp.route('/legs', methods=['GET'])
+@leg_bp.route('/legs', methods=['GET'])
 def get_legs():
     connection = get_db_connection()
     if connection is None:
@@ -19,7 +21,7 @@ def get_legs():
           release_db_connection(connection)
 
 # Get one leg
-@airline_bp.route('/legs/<string:legID>', methods=['GET'])
+@leg_bp.route('/legs/<string:legID>', methods=['GET'])
 def get_leg(legID):
     connection = get_db_connection()
     if connection is None:
@@ -37,7 +39,7 @@ def get_leg(legID):
         release_db_connection(connection)
   
 # Create leg
-@airline_bp.route('/legs/<string:legID>', methods=['POST'])
+@leg_bp.route('/legs/<string:legID>', methods=['POST'])
 def create_leg(legID):
     connection = get_db_connection()
     if connection is None:
@@ -45,6 +47,9 @@ def create_leg(legID):
     try:
         data = request.get_json()
         legID = data.get("legID")
+        departure = data.get("departure")
+        arrival = data.get("arrival")
+        distance = data.get(distance)
         
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
@@ -63,7 +68,7 @@ def create_leg(legID):
   
 
 # Delete leg
-@airline_bp.route('/leg/<string:legID>', methods=['DELETE'])
+@leg_bp.route('/leg/<string:legID>', methods=['DELETE'])
 def delete_leg(legID):
     connection = get_db_connection()
     if connection is None:

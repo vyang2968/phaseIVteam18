@@ -2,8 +2,10 @@ from flask import Blueprint, jsonify, request
 from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
+passenger_bp = Blueprint('passenger', __name__)
+
 # Get all passengers
-@airline_bp.route('/passengers', methods=['GET'])
+@passenger_bp.route('/passengers', methods=['GET'])
 def get_passengers():
     connection = get_db_connection()
     if connection is None:
@@ -19,7 +21,7 @@ def get_passengers():
           release_db_connection(connection)
 
 # Get one passenger
-@airline_bp.route('/passengers/<string:personID>', methods=['GET'])
+@passenger_bp.route('/passengers/<string:personID>', methods=['GET'])
 def get_passenger(personID):
     connection = get_db_connection()
     if connection is None:
@@ -37,7 +39,7 @@ def get_passenger(personID):
         release_db_connection(connection)
   
 # Create passenger
-@airline_bp.route('/passengers/<string:personID>', methods=['POST'])
+@passenger_bp.route('/passengers/<string:personID>', methods=['POST'])
 def create_passenger(personID):
     connection = get_db_connection()
     if connection is None:
@@ -45,6 +47,8 @@ def create_passenger(personID):
     try:
         data = request.get_json()
         personID = data.get("personID")
+        miles = data.get("miles")
+        funds = data.get("funds")
         
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
@@ -63,7 +67,7 @@ def create_passenger(personID):
   
 
 # Delete passenger
-@airline_bp.route('/passenger/<string:personID>', methods=['DELETE'])
+@passenger_bp.route('/passenger/<string:personID>', methods=['DELETE'])
 def delete_passenger(personID):
     connection = get_db_connection()
     if connection is None:

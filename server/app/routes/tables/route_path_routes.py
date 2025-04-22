@@ -48,6 +48,7 @@ def create_route_path(routeID, legID):
         data = request.get_json()
         routeID = data.get("routeID")
         legID = data.get("legID")
+        sequence = data.get("sequence")
 
         cursor = connection.cursor(dictionary=True)
         cursor.execute(

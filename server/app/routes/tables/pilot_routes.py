@@ -47,6 +47,9 @@ def create_pilot(personID):
     try:
         data = request.get_json()
         personID = data.get("personID")
+        taxID = data.get("taxID")
+        experience = data.get("experience")
+        commanding_flight = data.get("commanding_flight")
 
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
