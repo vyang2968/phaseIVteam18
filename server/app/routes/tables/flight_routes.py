@@ -2,8 +2,10 @@ from flask import Blueprint, jsonify, request
 from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
+flight_bp = Blueprint('flight', __name__)
+
 # Get all flights
-@airline_bp.route('/flights', methods=['GET'])
+@flight_bp.route('/flights', methods=['GET'])
 def get_flights():
     connection = get_db_connection()
     if connection is None:
@@ -19,7 +21,7 @@ def get_flights():
           release_db_connection(connection)
 
 # Get one flight
-@airline_bp.route('/flights/<string:flightID>', methods=['GET'])
+@flight_bp.route('/flights/<string:flightID>', methods=['GET'])
 def get_flight(flightID):
     connection = get_db_connection()
     if connection is None:
@@ -37,8 +39,8 @@ def get_flight(flightID):
         release_db_connection(connection)
   
 # Create flight
-@airline_bp.route('/flights/<string:flightID>', methods=['POST'])
-def create_flight(flightID):
+@flight_bp.route('/flights/<string:flightID>', methods=['POST'])
+def create_flight(flightID, routeID, support_airline, support_tail, progress, airplane_status, next_time, cost):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
@@ -63,7 +65,7 @@ def create_flight(flightID):
   
 
 # Delete flight
-@airline_bp.route('/flight/<string:flightID>', methods=['DELETE'])
+@flight_bp.route('/flight/<string:flightID>', methods=['DELETE'])
 def delete_flight(flightID):
     connection = get_db_connection()
     if connection is None:

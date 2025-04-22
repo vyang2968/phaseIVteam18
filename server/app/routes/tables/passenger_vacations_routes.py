@@ -2,8 +2,10 @@ from flask import Blueprint, jsonify, request
 from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
+passenger_vacations_bp = Blueprint('passenger_vacations', __name__)
+
 # Get all passenger_vacationss
-@airline_bp.route('/passenger_vacationss', methods=['GET'])
+@passenger_vacations_bp.route('/passenger_vacationss', methods=['GET'])
 def get_passenger_vacationss():
     connection = get_db_connection()
     if connection is None:
@@ -19,7 +21,7 @@ def get_passenger_vacationss():
           release_db_connection(connection)
 
 # Get one passenger_vacations
-@airline_bp.route('/passenger_vacationss/<string:personID>/<string:airportID>', methods=['GET'])
+@passenger_vacations_bp.route('/passenger_vacationss/<string:personID>/<string:airportID>', methods=['GET'])
 def get_passenger_vacations(personID, airportID):
     connection = get_db_connection()
     if connection is None:
@@ -37,7 +39,7 @@ def get_passenger_vacations(personID, airportID):
         release_db_connection(connection)
 
 # Create passenger_vacations
-@airline_bp.route('/passenger_vacationss/<string:personID>/<string:airportID>', methods=['POST'])
+@passenger_vacations_bp.route('/passenger_vacationss/<string:personID>/<string:airportID>', methods=['POST'])
 def create_passenger_vacations(personID, airportID):
     connection = get_db_connection()
     if connection is None:
@@ -46,6 +48,7 @@ def create_passenger_vacations(personID, airportID):
         data = request.get_json()
         personID = data.get("personID")
         airportID = data.get("airportID")
+        sequence = data.get("sequence")
 
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
@@ -64,7 +67,7 @@ def create_passenger_vacations(personID, airportID):
   
 
 # Delete passenger_vacations
-@airline_bp.route('/passenger_vacations/<string:personID>/<string:airportID>', methods=['DELETE'])
+@passenger_vacations_bp.route('/passenger_vacations/<string:personID>/<string:airportID>', methods=['DELETE'])
 def delete_passenger_vacations(personID, airportID):
     connection = get_db_connection()
     if connection is None:

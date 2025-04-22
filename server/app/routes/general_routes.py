@@ -19,7 +19,7 @@ def get_tables():
         
         rows = cursor.fetchall()
         
-        tables_only = [row[f'Tables_in_{'flight_tracking'}'] for row in rows]
+        tables_only = [row[f"Tables_in_{'flight_tracking'}"] for row in rows]
 
         return jsonify(tables_only), 200
     except Exception as e:
@@ -42,7 +42,7 @@ def get_views():
         
         rows = cursor.fetchall()
         
-        tables_only = [row[f'Tables_in_{'flight_tracking'}'] for row in rows]
+        tables_only = [row[f"Tables_in_{'flight_tracking'}"] for row in rows]
 
         return jsonify(tables_only), 200
     except Exception as e:

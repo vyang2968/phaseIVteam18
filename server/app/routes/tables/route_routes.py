@@ -2,8 +2,10 @@ from flask import Blueprint, jsonify, request
 from psycopg2.extras import RealDictCursor
 from app.db_connection import get_db_connection, release_db_connection
 
+route_bp = Blueprint('route', __name__)
+
 # Get all routes
-@airline_bp.route('/routes', methods=['GET'])
+@route_bp.route('/routes', methods=['GET'])
 def get_routes():
     connection = get_db_connection()
     if connection is None:
@@ -19,7 +21,7 @@ def get_routes():
           release_db_connection(connection)
 
 # Get one route
-@airline_bp.route('/routes/<string:routeID>', methods=['GET'])
+@route_bp.route('/routes/<string:routeID>', methods=['GET'])
 def get_route(routeID):
     connection = get_db_connection()
     if connection is None:
@@ -37,7 +39,7 @@ def get_route(routeID):
         release_db_connection(connection)
   
 # Create route
-@airline_bp.route('/routes/<string:routeID>', methods=['POST'])
+@route_bp.route('/routes/<string:routeID>', methods=['POST'])
 def create_route(routeID):
     connection = get_db_connection()
     if connection is None:
@@ -63,7 +65,7 @@ def create_route(routeID):
   
 
 # Delete route
-@airline_bp.route('/route/<string:routeID>', methods=['DELETE'])
+@route_bp.route('/route/<string:routeID>', methods=['DELETE'])
 def delete_route(routeID):
     connection = get_db_connection()
     if connection is None:
