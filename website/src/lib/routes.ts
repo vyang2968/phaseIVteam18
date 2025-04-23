@@ -18,5 +18,19 @@ export const tableNameToRoute: Record<string, string> = {
   flights_on_the_ground: '/flights_on_the_ground',
   people_in_the_air: '/people_in_the_air',
   people_on_the_ground: '/people_on_the_ground',
-  route_summary: '/route_summary'
+  route_summary: '/route_summary',
+
+  add_airplane: '/add_airplane',
+  add_airport: '/add_airport',
+  add_person: '/add_person',
+  grant_or_revoke_pilot_license: '/grant_or_revoke_pilot_license',
+  offer_flight: '/offer_flight',
+  flight_landing: '/flight_landing',
+  flight_takeoff: '/flight_takeoff',
+  passengers_board: '/passengers_board',
+  passengers_disembark: '/passengers_disembark',
+  assign_pilot: '/assign_pilot',
+  recycle_crew: '/recycle_crew',
+  retire_flight: '/retire_flight',
+  simulation_cycle: '/simulation_cycle'
 }

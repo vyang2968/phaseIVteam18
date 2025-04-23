@@ -2,18 +2,15 @@
 
 import {
   ZodObject,
-  ZodRawShape,
+  ZodEffects,
   ZodEnum,
   ZodNumber,
   ZodString,
   ZodBoolean,
   z,
-  ZodEffects,
 } from 'zod'
 import {
   useForm,
-  FormProvider,
-  Controller,
   DefaultValues,
   UseFormProps,
   useWatch,
@@ -32,25 +29,24 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-
 import {
   FormField,
   FormItem,
   FormLabel,
   FormControl,
   FormMessage,
-  FormDescription,
   Form,
 } from '@/components/ui/form'
 import { Spinner } from '@/components/ui/spinner'
-import { TableName } from '../utils/types'
 import { useEffect } from 'react'
+import { AirplaneSchema } from '../utils/types'
 
 type CreateFormProps<T extends ZodObject<any> | ZodEffects<ZodObject<any>>> = {
   schema: T
   defaultValues?: Partial<z.infer<T>>
   loading: boolean
   onSubmit: (data: z.infer<T>) => void
+  buttonText: string
 }
 
 export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObject<any>>>({
@@ -58,89 +54,97 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
   defaultValues,
   loading,
   onSubmit,
+  buttonText
 }: CreateFormProps<T>) {
-  const unwrappedSchema =
-    schema instanceof z.ZodEffects ? schema._def.schema : schema;
-  const shape = (unwrappedSchema as z.ZodObject<any>).shape;
+  const coreSchema = schema instanceof ZodEffects ? schema._def.schema : schema
+  const shape = (coreSchema as ZodObject<any>).shape
+
   const finalDefaults: DefaultValues<z.infer<T>> = {} as any
-
   for (const [key, def] of Object.entries(shape)) {
-    const defAny = def as any
-    const coreDef = defAny._def?.innerType ?? def
+    const inner = (def as any)._def?.innerType ?? def
     const userDefault = defaultValues?.[key as keyof typeof defaultValues]
-
-    let fallback: any = ''
-    if (coreDef instanceof ZodBoolean) fallback = false
-    else if (coreDef instanceof ZodNumber) fallback = 0
-    else if (coreDef instanceof ZodEnum) fallback = userDefault ?? ''
-    else {
-      let isNullable = false;
-      let current = defAny;
-      while (current?._def) {
-        if (current._def.typeName === 'ZodNullable') {
-          isNullable = true;
-          break;
-        }
-        current = current._def.innerType;
-      }
-      fallback = isNullable ? null : '';
-    }
-    finalDefaults[key as keyof typeof finalDefaults] =
-      userDefault !== undefined ? userDefault : fallback
+    if (inner instanceof ZodBoolean) finalDefaults[key] = userDefault ?? false
+    else if (inner instanceof ZodNumber) finalDefaults[key] = userDefault ?? 0
+    else finalDefaults[key] = userDefault ?? ''
   }
 
   const formConfig: UseFormProps<z.infer<T>> = {
     resolver: zodResolver(schema),
     defaultValues: finalDefaults,
   }
-
   const form = useForm<z.infer<T>>(formConfig)
-  const { control, handleSubmit } = form
+  const { control, handleSubmit, setValue } = form
 
-  function isRequired(def: any): boolean {
-    let current = def;
-    while (current?._def) {
-      if (
-        current._def.typeName === 'ZodOptional' || 
-        current._def.typeName === 'ZodNullable'
-      ) {
-        return false;
-      }
-      current = current._def.innerType;
-    }
-    return true;
-  }
-
-  function getCoreType(def: any): any {
-    let current = def;
-    while (current?._def?.innerType) {
-      current = current._def.innerType;
-    }
-    return current;
-  }  
-
-  const model = useWatch({ control, name: 'model' as Path<z.infer<T>> })
   const planeType = useWatch({ control, name: 'plane_type' as Path<z.infer<T>> })
 
   useEffect(() => {
-    const key = 'model' as Path<z.infer<T>>
-    if (planeType !== 'Boeing' && (model || model === '')) {
-      form.setValue(key, undefined as PathValue<z.infer<T>, typeof key>)
+    if (planeType === 'Boeing') {
+      setValue('model' as Path<z.infer<T>>, null as unknown as PathValue<z.infer<T>, 'model'>)
+    } else if (planeType === 'Airbus') {
+      setValue('model' as Path<z.infer<T>>, null as unknown as PathValue<z.infer<T>, 'model'>)
+      setValue('maintenanced' as Path<z.infer<T>>, false as unknown as PathValue<z.infer<T>, 'maintenanced'>)
+    } else {
+      setValue('model' as Path<z.infer<T>>, null as unknown as PathValue<z.infer<T>, 'model'>)
+      setValue('maintenanced' as Path<z.infer<T>>, false as unknown as PathValue<z.infer<T>, 'maintenanced'>)
+      setValue('neo' as Path<z.infer<T>>, false as unknown as PathValue<z.infer<T>, 'neo'>)      
     }
-  }, [planeType, model])
+  }, [planeType, setValue])
+  
+
+
+  function isRequired(def: any): boolean {
+    let curr = def
+    while (curr?._def) {
+      if (curr._def.typeName === 'ZodOptional' || curr._def.typeName === 'ZodNullable')
+        return false
+      curr = curr._def.innerType
+    }
+    return true
+  }
+
+  function getCoreType(def: any): any {
+    let curr = def
+    while (curr?._def?.innerType) curr = curr._def.innerType
+    return curr
+  }
+
+  const injectAndSubmit = (data: z.infer<T>) => {
+    if ('neo' in data && 'model' in data && 'maintenanced' in data) {
+      if (planeType === 'Boeing') {
+        data.neo = null;
+      } else if (planeType === 'Airbus') {
+        data.model = null;
+        data.maintenanced = null;
+      } else {
+        data.model = null;
+        data.maintenanced = null;
+        data.neo = null;
+      }
+    }
+
+    onSubmit(data)
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(injectAndSubmit)} className="space-y-6">
         {Object.entries(shape).map(([key, def]) => {
-          const defAny = def as any
-          const coreDef = getCoreType(defAny)
+          const core = getCoreType(def as any)
 
-          const isModelField = key === 'model'
-          const isDisabled = isModelField && planeType !== 'Boeing'
+          const alwaysRequired = isRequired(def)
+          const isBoeing = planeType === 'Boeing'
+          const isAirbus = planeType === 'Airbus'
 
-          // ENUM
-          if (coreDef instanceof ZodEnum) {
+          const requireModel = isBoeing
+          const requireMaint = isBoeing
+          const requireNeo = isAirbus
+
+          const disableModel = !isBoeing
+          const disableMaint = !isBoeing
+          const disableNeo = !isAirbus
+
+          // ENUM fields (including plane_type & model)
+          if (core instanceof ZodEnum) {
             return (
               <FormField
                 key={key}
@@ -149,27 +153,29 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <div>
-                        {key.includes('_')
-                          ? key
-                            .split('_')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(' ')
-                          : key.charAt(0).toUpperCase() + key.slice(1)}
-                        {isRequired(def) && <span className="text-red-400 ml-1">*</span>}
-                      </div>
+                      {key.includes('_')
+                        ? key
+                          .split('_')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' ')
+                        : key.charAt(0).toUpperCase() + key.slice(1)}
+                      {(alwaysRequired || (key === 'model' && requireModel)) && <span className="text-red-400 ml-1">*</span>}
                     </FormLabel>
                     <FormControl>
                       <Select
-                        onValueChange={(val) => {
-                          field.onChange(val === '' ? undefined : val)
-                        }}
-                        value={field.value || ''} disabled={isDisabled}>
+                        value={field.value === null ? '' : field.value ?? ''}
+                        onValueChange={(v) => field.onChange(v === '' ? null : v)}
+                        disabled={
+                          key === 'model' ? disableModel :
+                            key === 'neo' ? disableNeo :
+                              false
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder={`Select ${key}`} />
                         </SelectTrigger>
                         <SelectContent>
-                          {coreDef.options.map((opt: string) => (
+                          {core.options.map((opt: string) => (
                             <SelectItem key={opt} value={opt}>
                               {opt}
                             </SelectItem>
@@ -184,8 +190,18 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
             )
           }
 
-          // BOOLEAN
-          if (coreDef instanceof ZodBoolean) {
+          // BOOLEAN fields
+          if (core instanceof ZodBoolean) {
+            const isDisabled =
+              key === 'maintenanced' ? disableMaint :
+                key === 'neo' ? disableNeo :
+                  false
+
+            const showAsterisk =
+              key === 'maintenanced' ? requireMaint :
+                key === 'neo' ? requireNeo :
+                  false
+
             return (
               <FormField
                 key={key}
@@ -195,20 +211,19 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
                   <FormItem className="flex items-center gap-2 space-y-0">
                     <FormControl>
                       <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
+                        checked={!!field.value}
+                        onCheckedChange={(checked) => field.onChange(!!checked)}
+                        disabled={isDisabled}
                       />
                     </FormControl>
-                    <FormLabel>
-                      <div>
-                        {key.includes('_')
-                          ? key
-                            .split('_')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(' ')
-                          : key.charAt(0).toUpperCase() + key.slice(1)}
-                        {isRequired(def) && <span className="text-red-400 ml-1">*</span>}
-                      </div>
+                    <FormLabel className="flex-1">
+                      {key.includes('_')
+                        ? key
+                          .split('_')
+                          .map(w => w[0].toUpperCase() + w.slice(1))
+                          .join(' ')
+                        : key[0].toUpperCase() + key.slice(1)}
+                      {showAsterisk && <span className="text-red-400 ml-1">*</span>}
                     </FormLabel>
                     <FormMessage />
                   </FormItem>
@@ -217,8 +232,8 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
             )
           }
 
-          // NUMBER
-          if (coreDef instanceof ZodNumber) {
+          // NUMBER fields
+          if (core instanceof ZodNumber) {
             return (
               <FormField
                 key={key}
@@ -227,42 +242,35 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <div>
-                        {key.includes('_')
-                          ? key
-                            .split('_')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(' ')
-                          : key.charAt(0).toUpperCase() + key.slice(1)}
-                        {isRequired(def) && <span className="text-red-400 ml-1">*</span>}
-                      </div>
+                      {key.includes('_')
+                        ? key
+                          .split('_')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' ')
+                        : key.charAt(0).toUpperCase() + key.slice(1)}
+                      {alwaysRequired && <span className="text-red-400 ml-1">*</span>}
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        {...field}
-                        placeholder="Enter a number"
-                        value={field.value === undefined || field.value === null ? "" : field.value}
+                        value={field.value ?? ''}
                         onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === "") {
-                            field.onChange(undefined); // Allow clearing the value
-                          } else {
-                            const numberValue = isNaN(Number(value)) ? undefined : Number(value); // Only set a valid number
-                            field.onChange(numberValue);
-                          }
+                          const val = e.target.value
+
+                          field.onChange(val === '' ? undefined : Number(val))
                         }}
+                        onBlur={field.onBlur}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            );
+            )
           }
 
-          // STRING (and fallback)
-          if (coreDef instanceof ZodString) {
+          // STRING fields
+          if (core instanceof ZodString) {
             return (
               <FormField
                 key={key}
@@ -271,26 +279,16 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      <div>
-                        {key.includes('_')
-                          ? key
-                            .split('_')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(' ')
-                          : key.charAt(0).toUpperCase() + key.slice(1)}
-                        {isRequired(def) && <span className="text-red-400 ml-1">*</span>}
-                      </div>
+                      {key.includes('_')
+                        ? key
+                          .split('_')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' ')
+                        : key.charAt(0).toUpperCase() + key.slice(1)}
+                      {alwaysRequired && <span className="text-red-400 ml-1">*</span>}
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value === undefined || field.value === null ? "" : field.value}
-                        onChange={(e) => {
-                          console.log(e.target.value)
-                          const value = e.target.value;
-                          field.onChange(value === "" ? null : value);
-                        }}
-                      />
+                      <Input {...field} disabled={false} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -301,9 +299,9 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
 
           return null
         })}
-        <Button type="submit">
-          Create
-          {loading && <Spinner className='animate-spin text-white' size="small" />}
+
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? <Spinner className="h-4 w-4 animate-spin" /> : buttonText}
         </Button>
       </form>
     </Form>

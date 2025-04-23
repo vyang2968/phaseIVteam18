@@ -4,7 +4,7 @@ from app.db_connection import get_db_connection, release_db_connection
 
 simulation_cycle_bp = Blueprint('simulation_cycle', __name__)
 
-@simulation_cycle_bp.route('/simulation_cycle', methods=['POST'])
+@simulation_cycle_bp.route('/procedures/simulation_cycle', methods=['POST'])
 def simulation_cycle():
     connection = get_db_connection()
     if connection is None:

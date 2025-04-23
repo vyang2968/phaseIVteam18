@@ -4,7 +4,7 @@ from app.db_connection import get_db_connection, release_db_connection
 
 add_person_bp = Blueprint('add_person', __name__)
 
-@add_person_bp.route('/add_person', methods=['POST'])
+@add_person_bp.route('/procedures/add_person', methods=['POST'])
 def add_person(personID, first_name, last_name, locationID, taxID, experience, miles, funds):
     connection = get_db_connection()
     if connection is None:

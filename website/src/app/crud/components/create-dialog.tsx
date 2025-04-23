@@ -60,6 +60,7 @@ export default function CreateDialog<T extends ZodObject<any> | ZodEffects<ZodOb
           loading={loading}
           defaultValues={defaultValues}
           onSubmit={handleSubmit}
+          buttonText='Create'
         />
       </DialogContent>
     </Dialog>

@@ -108,7 +108,7 @@ def create_airplane(airlineid, tail_num):
         tail_num = data.get("tail_num")
         seat_capacity = data.get("seat_capacity")
         speed = data.get("speed")
-        locationID = data.get("locationid")  # Can be None
+        locationID = data.get("locationid")
         plane_type = data.get("plane_type")
         maintenanced = data.get("maintenanced")
         model = data.get("model")

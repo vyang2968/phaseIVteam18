@@ -5,17 +5,19 @@ export const AirlineSchema = z.object({
   revenue: z.number().min(1)
 })
 
-export const AirplaneSchema = z.object({
+export const AirplaneSchemaRaw = z.object({
   airlineid: z.string().min(1, { message: "Required" }),
   tail_num: z.string().min(1, { message: "Required" }),
   seat_capacity: z.number().min(1),
   speed: z.number().min(1),
   locationid: z.string().optional().nullable(),
   plane_type: z.enum(["Boeing", "Airbus", "None"], { message: "Required" }).optional(),
-  model: z.enum(["717", "727", "737", "747", "757", "767", "777", "787"]).optional(),
-  maintenanced: z.boolean().optional(),
-  neo: z.boolean().optional(),
-}).superRefine((data, ctx) => {
+  model: z.enum(["717", "727", "737", "747", "757", "767", "777", "787"]).optional().nullable(),
+  maintenanced: z.boolean().optional().nullable(),
+  neo: z.boolean().optional().nullable(),
+})
+
+export const AirplaneSchema = AirplaneSchemaRaw.superRefine((data, ctx) => {
   switch (data.plane_type) {
     case 'Boeing':
       if (!data.model) {

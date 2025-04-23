@@ -4,16 +4,18 @@ from app.db_connection import get_db_connection, release_db_connection
 
 retire_flight_bp = Blueprint('retire_flight', __name__)
 
-@retire_flight_bp.route('/retire_flight', methods=['POST'])
-def retire_flight(flightID):
+@retire_flight_bp.route('/procedures/retire_flight', methods=['POST'])
+def retire_flight():
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
+        data = request.get_json()
+        flightID = data.get("flightid")
         cursor.execute(
             "call retire_flight(%s);",
-            (flightID)
+            (flightID,)
             )
 
         connection.commit() # Needed because the database is being updated

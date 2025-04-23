@@ -4,16 +4,18 @@ from app.db_connection import get_db_connection, release_db_connection
 
 recycle_crew_bp = Blueprint('recycle_crew', __name__)
 
-@recycle_crew_bp.route('/recycle_crew', methods=['POST'])
-def recycle_crew(flightID):
+@recycle_crew_bp.route('/procedures/recycle_crew', methods=['POST'])
+def recycle_crew():
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
+        data = request.get_json()
+        flightID = data.get("flightid")
         cursor.execute(
             "call recycle_crew(%s);",
-            (flightID)
+            (flightID, )
             )
 
         connection.commit() # Needed because the database is being updated

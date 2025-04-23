@@ -55,26 +55,20 @@ def create_app():
     
     app.register_blueprint(general_bp)
     app.register_blueprint(views_bp)
-
-    # Import and register procedure blueprints
-    procedure_blueprints = [
-        add_airplane_bp,
-        add_airport_bp,
-        add_person_bp,
-        assign_pilot_bp,
-        flight_landing_bp,
-        flight_takeoff_bp,
-        grant_or_revoke_pilot_license_bp,
-        offer_flight_bp,
-        passengers_board_bp,
-        passengers_disembark_bp,
-        recycle_crew_bp,
-        retire_flight_bp,
-        simulation_cycle_bp
-        ]
     
-    for blueprint in procedure_blueprints:
-        app.register_blueprint(blueprint)
+    app.register_blueprint(add_airplane_bp)
+    app.register_blueprint(add_airport_bp)
+    app.register_blueprint(add_person_bp)
+    app.register_blueprint(assign_pilot_bp)
+    app.register_blueprint(flight_landing_bp)
+    app.register_blueprint(flight_takeoff_bp)
+    app.register_blueprint(grant_or_revoke_pilot_license_bp)
+    app.register_blueprint(offer_flight_bp)
+    app.register_blueprint(passengers_board_bp)
+    app.register_blueprint(passengers_disembark_bp)
+    app.register_blueprint(recycle_crew_bp)
+    app.register_blueprint(retire_flight_bp)
+    app.register_blueprint(simulation_cycle_bp)
     
     atexit.register(close_all_db_connections)
     

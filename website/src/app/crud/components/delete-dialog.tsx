@@ -16,9 +16,8 @@ export default function DeleteDialog({ onConfirm }: { onConfirm: () => void }) {
 
   return (
     <>
-      {/* This keeps the dialog alive even when DropdownMenu closes */}
       <DropdownMenuItem onSelect={(e) => {
-        e.preventDefault() // prevent menu from closing
+        e.preventDefault()
         setOpen(true)
       }}>
         Delete
