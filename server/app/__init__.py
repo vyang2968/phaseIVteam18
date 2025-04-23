@@ -5,6 +5,21 @@ from app.routes.general_routes import general_bp
 from app.routes.views.views_routes import views_bp
 from flask_cors import CORS
 
+# Procedure Imports
+from app.routes.procedures.add_airplane_routes import add_airplane_bp
+from app.routes.procedures.add_airport_routes import add_airport_bp
+from app.routes.procedures.add_person_routes import add_person_bp
+from app.routes.procedures.assign_pilot_routes import assign_pilot_bp
+from app.routes.procedures.flight_landing_routes import flight_landing_bp
+from app.routes.procedures.flight_takeoff_routes import flight_takeoff_bp
+from app.routes.procedures.grant_or_revoke_pilot_license_routes import grant_or_revoke_pilot_license_bp
+from app.routes.procedures.offer_flight_routes import offer_flight_bp
+from app.routes.procedures.passengers_board_routes import passengers_board_bp
+from app.routes.procedures.passengers_disembark_routes import passengers_disembark_bp
+from app.routes.procedures.recycle_crew_routes import recycle_crew_bp
+from app.routes.procedures.retire_flight_routes import retire_flight_bp
+from app.routes.procedures.simulation_cycle_routes import simulation_cycle_bp
+
 from app.routes.tables.airline_routes import airline_bp
 from app.routes.tables.airplane_routes import airplane_bp
 from app.routes.tables.airport_routes import airport_bp
@@ -40,6 +55,26 @@ def create_app():
     
     app.register_blueprint(general_bp)
     app.register_blueprint(views_bp)
+
+    # Import and register procedure blueprints
+    procedure_blueprints = [
+        add_airplane_bp,
+        add_airport_bp,
+        add_person_bp,
+        assign_pilot_bp,
+        flight_landing_bp,
+        flight_takeoff_bp,
+        grant_or_revoke_pilot_license_bp,
+        offer_flight_bp,
+        passengers_board_bp,
+        passengers_disembark_bp,
+        recycle_crew_bp,
+        retire_flight_bp,
+        simulation_cycle_bp
+        ]
+    
+    for blueprint in procedure_blueprints:
+        app.register_blueprint(blueprint)
     
     atexit.register(close_all_db_connections)
     
