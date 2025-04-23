@@ -855,7 +855,7 @@ sp_main: begin
 	-- Identify the next flight to be processed and all its details
 	select flightID, airplane_status, routeID, progress into nextFlightID, nextFlightStatus, nextFlightRouteID, nextFlightProgress
 	from flight 
-	order by next_time asc, airplane_status desc, flightID asc
+	order by next_time asc, airplane_status asc, flightID asc
 	limit 1;
     
     -- If the flight is in the air:
@@ -868,7 +868,7 @@ sp_main: begin
     elseif nextFlightStatus = 'on_ground'
     then
 		-- If it has reached the end:
-        if not exists (select sequence from route_path where routeID = nextFlightRouteID) 
+		if not exists (select 1 from route_path where routeID = nextFlightRouteID and sequence = nextFlightProgress)
         then
 			-- Recycle crew and retire flight
 			call recycle_crew(nextFlightID);
