@@ -20,6 +20,20 @@ from app.routes.procedures.recycle_crew_routes import recycle_crew_bp
 from app.routes.procedures.retire_flight_routes import retire_flight_bp
 from app.routes.procedures.simulation_cycle_routes import simulation_cycle_bp
 
+from app.routes.tables.airline_routes import airline_bp
+from app.routes.tables.airplane_routes import airplane_bp
+from app.routes.tables.airport_routes import airport_bp
+from app.routes.tables.flight_routes import flight_bp
+from app.routes.tables.leg_routes import leg_bp
+from app.routes.tables.location_routes import location_bp
+from app.routes.tables.passenger_routes import passenger_bp
+from app.routes.tables.passenger_vacations_routes import passenger_vacations_bp
+from app.routes.tables.person_routes import person_bp
+from app.routes.tables.pilot_licenses_routes import pilot_licenses_bp
+from app.routes.tables.pilot_routes import pilot_bp
+from app.routes.tables.route_path_routes import route_path_bp
+from app.routes.tables.route_routes import route_bp
+
 def create_app():
     app = Flask(__name__)
     CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
