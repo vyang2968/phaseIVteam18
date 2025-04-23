@@ -868,7 +868,7 @@ sp_main: begin
     elseif nextFlightStatus = 'on_ground'
     then
 		-- If it has reached the end:
-		if not exists (select 1 from route_path where routeID = nextFlightRouteID and sequence = nextFlightProgress)
+        if not exists (select sequence from route_path where routeID = nextFlightRouteID) 
         then
 			-- Recycle crew and retire flight
 			call recycle_crew(nextFlightID);
