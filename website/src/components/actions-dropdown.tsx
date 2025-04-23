@@ -2,12 +2,13 @@ import { MoreHorizontal } from "lucide-react";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import DeleteDialog from "@/app/crud/components/delete-dialog";
-import { Airline, Airplane, TableName, TableSchemaFor } from "@/app/crud/utils/types";
+import { Airline, Airplane, TableName, TableSchemaFor, tableSchemaMap } from "@/app/crud/utils/types";
 import { useState } from "react";
 import EditDialog from "@/app/crud/components/edit-dialog";
+import { idsFor } from "@/app/crud/utils/ids";
 
 interface ActionDropdownProps {
-  activeTab: string;
+  activeTab: TableName;
   row: TableSchemaFor<TableName>
   onDelete: (identifiers: Record<string, string>) => void;
 }
@@ -39,23 +40,11 @@ export default function ActionsDropdown({ activeTab, row, onDelete }: ActionDrop
         <DropdownMenuSeparator />
         <DeleteDialog
           onConfirm={() => {
-            let identifiers: Record<string, string>
-            switch (activeTab) {
-              case 'airline':
-                identifiers = {
-                  airlineid: (row as Airline).airlineid
-                }
-                break;
-              case 'airplane':
-                identifiers = {
-                  airlineid: (row as Airplane).airlineid,
-                  tail_num: (row as Airplane).tail_num
-                }
-                break;
-              default:
-                identifiers = {}
-                break;
-            }
+            const identifiers = 
+              Object.fromEntries(
+                idsFor[activeTab]
+                  .map(identif => [identif, row[identif as keyof typeof row]])
+              )
             onDelete(identifiers)
             setDropdownOpen(false)
           }}

@@ -5,7 +5,7 @@ from app.db_connection import get_db_connection, release_db_connection
 passenger_vacations_bp = Blueprint('passenger_vacations', __name__)
 
 # Get all passenger_vacationss
-@passenger_vacations_bp.route('/passenger_vacationss', methods=['GET'])
+@passenger_vacations_bp.route('/passenger_vacations', methods=['GET'])
 def get_passenger_vacationss():
     connection = get_db_connection()
     if connection is None:
@@ -21,7 +21,7 @@ def get_passenger_vacationss():
           release_db_connection(connection)
 
 # Get one passenger_vacations
-@passenger_vacations_bp.route('/passenger_vacationss/<string:personID>/<string:airportID>', methods=['GET'])
+@passenger_vacations_bp.route('/passenger_vacations/<string:personID>/<string:airportID>', methods=['GET'])
 def get_passenger_vacations(personID, airportID):
     connection = get_db_connection()
     if connection is None:
@@ -39,15 +39,15 @@ def get_passenger_vacations(personID, airportID):
         release_db_connection(connection)
 
 # Create passenger_vacations
-@passenger_vacations_bp.route('/passenger_vacationss/<string:personID>/<string:airportID>', methods=['POST'])
+@passenger_vacations_bp.route('/passenger_vacations/<string:personID>/<string:airportID>', methods=['POST'])
 def create_passenger_vacations(personID, airportID):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        personID = data.get("personID")
-        airportID = data.get("airportID")
+        personID = data.get("personid")
+        airportID = data.get("airportid")
         sequence = data.get("sequence")
 
         cursor = connection.cursor(dictionary=True)
@@ -67,14 +67,14 @@ def create_passenger_vacations(personID, airportID):
   
 
 # Delete passenger_vacations
-@passenger_vacations_bp.route('/passenger_vacations/<string:personID>/<string:airportID>', methods=['DELETE'])
-def delete_passenger_vacations(personID, airportID):
+@passenger_vacations_bp.route('/passenger_vacations/<string:personID>/<string:sequence>', methods=['DELETE'])
+def delete_passenger_vacations(personID, sequence):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM passenger_vacations WHERE personID = %s AND airportID = %s", (personID, airportID))
+        cursor.execute("DELETE FROM passenger_vacations WHERE personID = %s AND sequence = %s", (personID, sequence))
         connection.commit()
         return jsonify({"message": "Passenger_vacations deleted successfully"}), 200
     except Exception as e:

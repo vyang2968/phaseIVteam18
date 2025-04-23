@@ -52,7 +52,7 @@ export default function CreateDialog<T extends ZodObject<any> | ZodEffects<ZodOb
       <DialogContent className='h-auto overflow-y-scroll'  style={{ maxHeight: '90vh', overflowY: 'scroll' }}>
         <DialogTitle>Create a new {tableName}</DialogTitle>
         <DialogDescription>
-          Fill in the fields to make a new {tableName}
+          Fill in the fields to make a new {tableName}. Leave blank for null.
         </DialogDescription>
 
         <CreateForm

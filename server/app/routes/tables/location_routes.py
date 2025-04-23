@@ -39,14 +39,14 @@ def get_location(locationID):
         release_db_connection(connection)
   
 # Create location
-@location_bp.route('/locations/<string:locationID>', methods=['POST'])
-def create_location(locationID):
+@location_bp.route('/locations/<string:locationid>', methods=['POST'])
+def create_location(locationid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        locationID = data.get("locationID")
+        locationid = data.get("locationid")
         
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
@@ -54,7 +54,7 @@ def create_location(locationID):
             INSERT INTO location (locationID)
             VALUES (%s)
             """,
-            (locationID)
+            (locationid,)
         )
         connection.commit()
         return jsonify({"message": "Location created successfully"}), 200
@@ -65,14 +65,14 @@ def create_location(locationID):
   
 
 # Delete location
-@location_bp.route('/location/<string:locationID>', methods=['DELETE'])
-def delete_location(locationID):
+@location_bp.route('/locations/<string:locationid>', methods=['DELETE'])
+def delete_location(locationid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM location WHERE locationID = %s", (locationID))
+        cursor.execute("DELETE FROM location WHERE locationID = %s", (locationid,))
         connection.commit()
         return jsonify({"message": "Location deleted successfully"}), 200
     except Exception as e:

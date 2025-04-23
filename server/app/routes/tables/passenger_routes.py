@@ -21,7 +21,7 @@ def get_passengers():
           release_db_connection(connection)
 
 # Get one passenger
-@passenger_bp.route('/passengers/<string:personID>', methods=['GET'])
+@passenger_bp.route('/passengers/<string:personid>', methods=['GET'])
 def get_passenger(personID):
     connection = get_db_connection()
     if connection is None:
@@ -39,14 +39,14 @@ def get_passenger(personID):
         release_db_connection(connection)
   
 # Create passenger
-@passenger_bp.route('/passengers/<string:personID>', methods=['POST'])
-def create_passenger(personID):
+@passenger_bp.route('/passengers/<string:personid>', methods=['POST'])
+def create_passenger(personid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        personID = data.get("personID")
+        personID = data.get("personid")
         miles = data.get("miles")
         funds = data.get("funds")
         
@@ -67,14 +67,14 @@ def create_passenger(personID):
   
 
 # Delete passenger
-@passenger_bp.route('/passenger/<string:personID>', methods=['DELETE'])
+@passenger_bp.route('/passengers/<string:personID>', methods=['DELETE'])
 def delete_passenger(personID):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM passenger WHERE personID = %s", (personID))
+        cursor.execute("DELETE FROM passenger WHERE personID = %s", (personID, ))
         connection.commit()
         return jsonify({"message": "Passenger deleted successfully"}), 200
     except Exception as e:

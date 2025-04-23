@@ -40,19 +40,19 @@ def get_airline(airportID):
 
 # Create airport
 # INSERT INTO airport (airportID, airport_name, city, state, country, locationID) VALUES
-@airport_bp.route('/airports/<string:airportID>', methods=['POST'])
-def create_airline(airportID):
+@airport_bp.route('/airports/<string:airportid>', methods=['POST'])
+def create_airline(airportid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        airportID = data.get("airportID")
-        airport_name = data.get("aiport_name")
+        airportID = data.get("airportid")
+        airport_name = data.get("airport_name")
         city = data.get("city")
         state = data.get("state")
         country = data.get("country")
-        locationID = data.get("locationID")
+        locationID = data.get("locationid")
         
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
@@ -63,23 +63,23 @@ def create_airline(airportID):
             (airportID, airport_name, city, state, country, locationID)
         )
         connection.commit()
-        return jsonify({"message": "Airline created successfully"}), 200
+        return jsonify({"message": "Airport created successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
 
-# Delete airline
-@airport_bp.route('/airlines/<string:airlineid>', methods=['DELETE'])
-def delete_airline(airlineid):
+# Delete airport
+@airport_bp.route('/airports/<string:airportid>', methods=['DELETE'])
+def delete_airline(airportid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM airline WHERE airlineid = %s", (airlineid,))
+        cursor.execute("DELETE FROM airport WHERE airportID = %s", (airportid,))
         connection.commit()
-        return jsonify({"message": "Airline deleted successfully"}), 200
+        return jsonify({"message": "Airport deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:

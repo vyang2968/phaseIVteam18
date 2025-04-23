@@ -39,15 +39,15 @@ def get_route_path(routeID, legID):
         release_db_connection(connection)
 
 # Create route_path
-@route_path_bp.route('/route_paths/<string:routeID>/<string:legID>', methods=['POST'])
-def create_route_path(routeID, legID):
+@route_path_bp.route('/route_paths/<string:routeid>/<string:legid>', methods=['POST'])
+def create_route_path(routeid, legid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        routeID = data.get("routeID")
-        legID = data.get("legID")
+        routeID = data.get("routeid")
+        legID = data.get("legid")
         sequence = data.get("sequence")
 
         cursor = connection.cursor(dictionary=True)
@@ -67,14 +67,14 @@ def create_route_path(routeID, legID):
   
 
 # Delete route_path
-@route_path_bp.route('/route_path/<string:routeID>/<string:legID>', methods=['DELETE'])
-def delete_route_path(routeID, legID):
+@route_path_bp.route('/route_paths/<string:routeid>/<string:sequence>', methods=['DELETE'])
+def delete_route_path(routeid, sequence):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM route_path WHERE routeID = %s AND legID = %s", (routeID, legID))
+        cursor.execute("DELETE FROM route_path WHERE routeID = %s AND sequence = %s", (routeid, sequence))
         connection.commit()
         return jsonify({"message": "Route_path deleted successfully"}), 200
     except Exception as e:

@@ -24,7 +24,7 @@ import { createContext, useContext, useState } from "react"
 import ActionsDropdown from "./actions-dropdown"
 
 type DataTableProps = {
-  activeTab: string;
+  activeTab: TableName;
   data: TableSchemaFor<TableName>[] | ViewSchemaFor<ViewName>[];
   actionsEnabled: boolean
   onDelete?: (identifiers: Record<string, string>) => void;

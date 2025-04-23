@@ -39,17 +39,17 @@ def get_leg(legID):
         release_db_connection(connection)
   
 # Create leg
-@leg_bp.route('/legs/<string:legID>', methods=['POST'])
-def create_leg(legID):
+@leg_bp.route('/legs/<string:legid>', methods=['POST'])
+def create_leg(legid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        legID = data.get("legID")
+        legID = data.get("legid")
         departure = data.get("departure")
         arrival = data.get("arrival")
-        distance = data.get(distance)
+        distance = data.get("distance")
         
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
@@ -68,14 +68,14 @@ def create_leg(legID):
   
 
 # Delete leg
-@leg_bp.route('/leg/<string:legID>', methods=['DELETE'])
-def delete_leg(legID):
+@leg_bp.route('/legs/<string:legid>', methods=['DELETE'])
+def delete_leg(legid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM leg WHERE legID = %s", (legID))
+        cursor.execute("DELETE FROM leg WHERE legID = %s", (legid,))
         connection.commit()
         return jsonify({"message": "Leg deleted successfully"}), 200
     except Exception as e:

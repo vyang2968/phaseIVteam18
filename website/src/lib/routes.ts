@@ -1,6 +1,17 @@
 export const tableNameToRoute: Record<string, string> = {
   airplane: "/airplanes",
   airline: "/airlines",
+  airport: "/airports",
+  flight: "/flights",
+  leg: "/legs",
+  location: "/locations",
+  passenger: "/passengers",
+  passenger_vacations: "/passenger_vacations",
+  person: "/persons",
+  pilot_licenses: "/pilot_licenses",
+  pilot: "/pilots",
+  route_path: "/route_paths",
+  route: "/routes",
   
   alternative_airports: '/alternative_airports',
   flights_in_the_air: '/flights_in_the_air',

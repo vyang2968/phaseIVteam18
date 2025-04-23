@@ -45,7 +45,6 @@ export async function getTableData(tableName: string): Promise<any[]> {
 }
 
 export async function deleteTableRow(tableName: string, identifier: Record<string, string>) {
-  console.log(identifier)
   try {
     const route = tableNameToRoute[tableName];
 

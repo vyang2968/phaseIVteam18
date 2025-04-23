@@ -5,7 +5,7 @@ from app.db_connection import get_db_connection, release_db_connection
 pilot_licenses_bp = Blueprint('pilot_licenses', __name__)
 
 # Get all pilot_licensess
-@pilot_licenses_bp.route('/pilot_licensess', methods=['GET'])
+@pilot_licenses_bp.route('/pilot_licenses', methods=['GET'])
 def get_pilot_licensess():
     connection = get_db_connection()
     if connection is None:
@@ -21,7 +21,7 @@ def get_pilot_licensess():
           release_db_connection(connection)
 
 # Get one pilot_licenses
-@pilot_licenses_bp.route('/pilot_licensess/<string:personID>/<string:license>', methods=['GET'])
+@pilot_licenses_bp.route('/pilot_licenses/<string:personID>/<string:license>', methods=['GET'])
 def get_pilot_licenses(personID, license):
     connection = get_db_connection()
     if connection is None:
@@ -39,14 +39,14 @@ def get_pilot_licenses(personID, license):
         release_db_connection(connection)
 
 # Create pilot_licenses
-@pilot_licenses_bp.route('/pilot_licensess/<string:personID>/<string:license>', methods=['POST'])
+@pilot_licenses_bp.route('/pilot_licenses/<string:personID>/<string:license>', methods=['POST'])
 def create_pilot_licenses(personID, license):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        personID = data.get("personID")
+        personID = data.get("personid")
         license = data.get("license")
 
         cursor = connection.cursor(dictionary=True)

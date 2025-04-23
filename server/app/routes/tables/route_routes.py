@@ -39,14 +39,14 @@ def get_route(routeID):
         release_db_connection(connection)
   
 # Create route
-@route_bp.route('/routes/<string:routeID>', methods=['POST'])
-def create_route(routeID):
+@route_bp.route('/routes/<string:routeid>', methods=['POST'])
+def create_route(routeid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        routeID = data.get("routeID")
+        routeID = data.get("routeid")
 
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
@@ -54,7 +54,7 @@ def create_route(routeID):
             INSERT INTO route (routeID)
             VALUES (%s)
             """,
-            (routeID)
+            (routeID, )
         )
         connection.commit()
         return jsonify({"message": "Route created successfully"}), 200
@@ -65,14 +65,14 @@ def create_route(routeID):
   
 
 # Delete route
-@route_bp.route('/route/<string:routeID>', methods=['DELETE'])
-def delete_route(routeID):
+@route_bp.route('/routes/<string:routeid>', methods=['DELETE'])
+def delete_route(routeid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM route WHERE routeID = %s", (routeID))
+        cursor.execute("DELETE FROM route WHERE routeID = %s", (routeid, ))
         connection.commit()
         return jsonify({"message": "Route deleted successfully"}), 200
     except Exception as e:

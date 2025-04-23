@@ -71,9 +71,9 @@ export const FlightSchema = z.object({
   routeid: z.string().min(1, { message: "Required" }),
   support_airline: z.string().optional().nullable(),
   support_tail: z.string().optional().nullable(),
-  progress: z.number().optional().nullable(),
-  airplane_status: z.string().optional().nullable(),
-  next_time: z.string().optional().nullable(),
+  progress: z.number().optional().nullable().default(0),
+  airplane_status: z.enum(['on_ground', 'in_flight']).optional().nullable(),
+  next_time: z.string().time().optional().nullable(),
   cost: z.number().default(0)
 });
 
@@ -109,14 +109,14 @@ export const PersonSchema = z.object({
 
 export const PilotSchema = z.object({
   personid: z.string().min(1, { message: "Required" }),
-  taxid: z.string().min(1, { message: "Required" }),
+  taxid: z.string().regex(/\d{3}-\d{2}-\d{4}$/, { message: "Please follow the format XXX-XX-XXXX"}).min(1, { message: "Required" }),
   experience: z.number().default(0),
   commanding_flight: z.string().optional().nullable()
 });
 
 export const PilotLicensesSchema = z.object({
   personid: z.string().min(1, { message: "Required" }),
-  license: z.string().min(1, { message: "Required" })
+  license: z.enum(['Airbus', 'Boeing', 'general'])
 });
 
 export const RouteSchema = z.object({

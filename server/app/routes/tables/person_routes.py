@@ -39,17 +39,18 @@ def get_person(personID):
         release_db_connection(connection)
   
 # Create person
-@person_bp.route('/persons/<string:personID>', methods=['POST'])
-def create_person(personID):
+@person_bp.route('/persons/<string:personid>', methods=['POST'])
+def create_person(personid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        personID = data.get("personID")
+        personID = data.get("personid")
+        print(personID)
         first_name = data.get("first_name")
         last_name = data.get("last_name")
-        locationID = data.get("locationID")
+        locationID = data.get("locationid")
 
         cursor = connection.cursor(dictionary=True)
         cursor.execute(
@@ -68,14 +69,15 @@ def create_person(personID):
   
 
 # Delete person
-@person_bp.route('/person/<string:personID>', methods=['DELETE'])
-def delete_person(personID):
+@person_bp.route('/persons/<string:personid>', methods=['DELETE'])
+def delete_person(personid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
+
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM person WHERE personID = %s", (personID))
+        cursor.execute("DELETE FROM person WHERE personID = %s", (personid, ))
         connection.commit()
         return jsonify({"message": "Person deleted successfully"}), 200
     except Exception as e:

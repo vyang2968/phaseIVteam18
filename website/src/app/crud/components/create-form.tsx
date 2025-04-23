@@ -73,8 +73,18 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
     if (coreDef instanceof ZodBoolean) fallback = false
     else if (coreDef instanceof ZodNumber) fallback = 0
     else if (coreDef instanceof ZodEnum) fallback = userDefault ?? ''
-    else fallback = ''
-
+    else {
+      let isNullable = false;
+      let current = defAny;
+      while (current?._def) {
+        if (current._def.typeName === 'ZodNullable') {
+          isNullable = true;
+          break;
+        }
+        current = current._def.innerType;
+      }
+      fallback = isNullable ? null : '';
+    }
     finalDefaults[key as keyof typeof finalDefaults] =
       userDefault !== undefined ? userDefault : fallback
   }
@@ -88,17 +98,26 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
   const { control, handleSubmit } = form
 
   function isRequired(def: any): boolean {
-    const checks = [def._def?.innerType ?? def]
-    let current = def
+    let current = def;
     while (current?._def) {
-      if (current._def.typeName === 'ZodOptional' || current._def.typeName === 'ZodNullable') {
-        return false
+      if (
+        current._def.typeName === 'ZodOptional' || 
+        current._def.typeName === 'ZodNullable'
+      ) {
+        return false;
       }
-      current = current._def.innerType
-      checks.push(current)
+      current = current._def.innerType;
     }
-    return true
+    return true;
   }
+
+  function getCoreType(def: any): any {
+    let current = def;
+    while (current?._def?.innerType) {
+      current = current._def.innerType;
+    }
+    return current;
+  }  
 
   const model = useWatch({ control, name: 'model' as Path<z.infer<T>> })
   const planeType = useWatch({ control, name: 'plane_type' as Path<z.infer<T>> })
@@ -115,7 +134,7 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {Object.entries(shape).map(([key, def]) => {
           const defAny = def as any
-          const coreDef = defAny._def?.innerType ?? def
+          const coreDef = getCoreType(defAny)
 
           const isModelField = key === 'model'
           const isDisabled = isModelField && planeType !== 'Boeing'
@@ -145,7 +164,7 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
                         onValueChange={(val) => {
                           field.onChange(val === '' ? undefined : val)
                         }}
-                      value={field.value || ''} disabled={isDisabled}>
+                        value={field.value || ''} disabled={isDisabled}>
                         <SelectTrigger>
                           <SelectValue placeholder={`Select ${key}`} />
                         </SelectTrigger>
@@ -263,7 +282,15 @@ export default function CreateForm<T extends ZodObject<any> | ZodEffects<ZodObje
                       </div>
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input
+                        {...field}
+                        value={field.value === undefined || field.value === null ? "" : field.value}
+                        onChange={(e) => {
+                          console.log(e.target.value)
+                          const value = e.target.value;
+                          field.onChange(value === "" ? null : value);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

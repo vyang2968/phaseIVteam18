@@ -39,15 +39,15 @@ def get_pilot(personID):
         release_db_connection(connection)
   
 # Create pilot
-@pilot_bp.route('/pilots/<string:personID>', methods=['POST'])
-def create_pilot(personID):
+@pilot_bp.route('/pilots/<string:personid>', methods=['POST'])
+def create_pilot(personid):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         data = request.get_json()
-        personID = data.get("personID")
-        taxID = data.get("taxID")
+        personID = data.get("personid")
+        taxID = data.get("taxid")
         experience = data.get("experience")
         commanding_flight = data.get("commanding_flight")
 
@@ -68,14 +68,14 @@ def create_pilot(personID):
   
 
 # Delete pilot
-@pilot_bp.route('/pilot/<string:personID>', methods=['DELETE'])
+@pilot_bp.route('/pilots/<string:personID>', methods=['DELETE'])
 def delete_pilot(personID):
     connection = get_db_connection()
     if connection is None:
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM pilot WHERE personID = %s", (personID))
+        cursor.execute("DELETE FROM pilot WHERE personID = %s", (personID, ))
         connection.commit()
         return jsonify({"message": "Pilot deleted successfully"}), 200
     except Exception as e:
