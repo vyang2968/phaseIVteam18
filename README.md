@@ -49,4 +49,7 @@ Clone this repository and open it
 ***You must have all the above running locally for this application to work***
 
 ### Work Split
-- Vincent: Frontend, small bit of backend, initial setup
+- Vincent: frontend, bit of backend, initial setup
+- Kevin: backend
+- Natasha: sql fixes
+- Mahathi: sql fixes and backend

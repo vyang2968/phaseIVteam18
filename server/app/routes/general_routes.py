@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+
 from app.db_connection import get_db_connection, release_db_connection
 
 general_bp = Blueprint('general', __name__)

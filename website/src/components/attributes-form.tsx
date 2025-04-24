@@ -66,14 +66,23 @@ export default function AttributesForm<
 
   const disabledKeys = idsFor[tableName] || []
 
+  function getCoreType(def: any): any {
+    let curr = def
+    while (curr?._def?.innerType) curr = curr._def.innerType
+    return curr
+  }
+
   const finalDefaults: DefaultValues<z.infer<T>> = {} as any
   for (const [key, def] of Object.entries(shape)) {
-    const inner = (def as any)._def?.innerType ?? def
+    const inner = getCoreType(def)
     const userDefault = defaultValues?.[key as keyof typeof defaultValues]
     if (inner instanceof ZodBoolean) finalDefaults[key] = userDefault ?? false
     else if (inner instanceof ZodNumber) finalDefaults[key] = userDefault ?? 0
+    else if (inner instanceof ZodString) finalDefaults[key] = userDefault ?? null
     else finalDefaults[key] = userDefault ?? ''
   }
+
+  console.log(finalDefaults)
 
   const formConfig: UseFormProps<z.infer<T>> = {
     resolver: zodResolver(schema),
@@ -88,7 +97,7 @@ export default function AttributesForm<
     const modelKey = 'model' as Path<z.infer<T>>;
     const maintainedKey = 'maintenanced' as Path<z.infer<T>>;
     const neoKey = 'neo' as Path<z.infer<T>>;
-  
+
     if (planeType === 'Boeing') {
       setValue(modelKey, null as PathValue<z.infer<T>, typeof modelKey>);
     } else if (planeType === 'Airbus') {
@@ -114,12 +123,6 @@ export default function AttributesForm<
     return true
   }
 
-  function getCoreType(def: any): any {
-    let curr = def
-    while (curr?._def?.innerType) curr = curr._def.innerType
-    return curr
-  }
-
   const injectAndSubmit = (data: z.infer<T>) => {
     if (tableName === 'airplane') {
       const airplaneData = data as unknown as Airplane
@@ -135,6 +138,7 @@ export default function AttributesForm<
       }
     }
 
+    console.log(data)
     onSubmit(data)
   }
 
@@ -153,6 +157,17 @@ export default function AttributesForm<
         {Object.entries(shape).map(([key, def]) => {
           const core = getCoreType(def as any)
           const required = isRequired(def)
+          const isBoeing = planeType === 'Boeing'
+          const isAirbus = planeType === 'Airbus'
+
+          const requireModel = isBoeing
+          const requireMaint = isBoeing
+          const requireNeo = isAirbus
+
+          const disableModel = !isBoeing
+          const disableMaint = !isBoeing
+          const disableNeo = !isAirbus
+
           const isDisabled = defaultValues ? disabledKeys.includes(key) : false
 
           // ENUM
@@ -172,9 +187,13 @@ export default function AttributesForm<
                     </FormLabel>
                     <FormControl>
                       <Select
-                        value={field.value ?? ''}
+                        value={field.value === null ? '' : field.value ?? ''}
                         onValueChange={(v) => field.onChange(v === '' ? null : v)}
-                        disabled={isDisabled}
+                        disabled={
+                          key === 'model' ? disableModel :
+                            key === 'neo' ? disableNeo :
+                              false
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={`Select ${key}`} />
@@ -197,6 +216,15 @@ export default function AttributesForm<
 
           // BOOLEAN
           if (core instanceof ZodBoolean) {
+            const isDisabled =
+              key === 'maintenanced' ? disableMaint :
+                key === 'neo' ? disableNeo :
+                  false
+
+            const required =
+              key === 'maintenanced' ? requireMaint :
+                key === 'neo' ? requireNeo :
+                  false
             return (
               <FormField
                 key={key}
@@ -271,7 +299,15 @@ export default function AttributesForm<
                       {required && <span className="text-red-400 ml-1">*</span>}
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} disabled={isDisabled} />
+                      <Input
+                        value={field.value === null ? '' : field.value} 
+                        onChange={(e) => {
+                          const val = e.target.value
+                          field.onChange(val === '' ? null : val)
+                        }}
+                        onBlur={field.onBlur}
+                        disabled={isDisabled}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
