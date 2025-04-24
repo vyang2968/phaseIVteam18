@@ -20,7 +20,7 @@ type DataTableProps<T extends ObjectSchema> = {
   data: TableSchemaFor<TableName>[] | ViewSchemaFor<ViewName>[];
   actionsEnabled: boolean
   onDelete?: (identifiers: Record<string, string>) => void;
-  onEdit: (data: z.infer<T>) => void
+  onEdit?: (data: z.infer<T>) => void
 }
 
 export default function DataTable<T extends ObjectSchema>({ data, activeTab, onDelete, actionsEnabled, onEdit }: DataTableProps<T>) {
@@ -66,7 +66,7 @@ export default function DataTable<T extends ObjectSchema>({ data, activeTab, onD
                   </TableCell>
                 );
               })}
-              {(actionsEnabled && onDelete) && <TableCell>
+              {(actionsEnabled && onDelete && onEdit) && <TableCell>
                   <ActionsDropdown 
                     row={row as TableSchemaFor<TableName>}
                     activeTab={activeTab}
