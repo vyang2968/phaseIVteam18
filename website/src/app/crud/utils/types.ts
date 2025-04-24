@@ -111,7 +111,7 @@ export const PersonSchema = z.object({
 
 export const PilotSchema = z.object({
   personid: z.string().min(1, { message: "Required" }),
-  taxid: z.string().regex(/\d{3}-\d{2}-\d{4}$/, { message: "Please follow the format XXX-XX-XXXX"}).min(1, { message: "Required" }),
+  taxid: z.string().regex(/\d{3}-\d{2}-\d{4}$/, { message: "Please follow the format XXX-XX-XXXX" }).min(1, { message: "Required" }),
   experience: z.number().default(0),
   commanding_flight: z.string().optional().nullable()
 });

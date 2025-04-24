@@ -10,60 +10,21 @@ export const AddAirportSchema = AirportSchema.extend({
   locationid: z.string()
 })
 
-export const AddPersonSchemaRaw = z.object({
-  personid: z.string(),
-  first_name: z.string(),
-  last_name: z.string().optional().nullable(),
-  locationid: z.string(),
-  taxid: z.string().optional().nullable(),
-  experience: z.number().optional().nullable(),
-  miles: z.number().optional().nullable(),
-  funds: z.number().optional().nullable(),
-})
-
-export const AddPersonSchema = AddPersonSchemaRaw.superRefine((data, ctx) => {
-  const isPilot = data.taxid && data.experience !== null && data.experience !== undefined
-  const isPassenger = data.miles !== null && data.miles !== undefined &&
-                      data.funds !== null && data.funds !== undefined
-
-  if (isPilot && isPassenger) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'A person cannot be both a pilot and a passenger.',
-      path: ['taxid'], // optional: point to a relevant field
-    })
-    return
-  }
-
-  if (!isPilot && !isPassenger) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'A person must be either a pilot or a passenger.',
-      path: ['taxid'], // optional
-    })
-    return
-  }
-
-  if (isPilot) {
-    if (data.miles !== undefined || data.funds !== undefined) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Pilots cannot have miles or funds.',
-        path: ['miles'],
-      })
-    }
-  }
-
-  if (isPassenger) {
-    if (data.taxid !== undefined || data.experience !== undefined) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Passengers cannot have taxid or experience.',
-        path: ['taxid'],
-      })
-    }
-  }
-})
+export const AddPersonSchema =
+  z.discriminatedUnion('person_type', [
+    PersonSchema
+      .merge(
+        PilotSchema
+          .extend({
+            person_type: z.literal('Pilot')
+          })
+          .omit({commanding_flight: true})
+      ),
+    PersonSchema
+      .merge(PassengerSchema.extend({
+        person_type: z.literal('Passenger')
+      }))
+  ])
 
 export const GrantOrRevokePilotLicenseSchema = z.object({
   personid: z.string().min(1, { message: "Required" }),

@@ -1089,36 +1089,3 @@ CREATE OR REPLACE VIEW alternative_airports (city , state , country , num_airpor
     HAVING COUNT(*) > 1;
 delimiter //
 
-drop procedure if exists debug_simulation_cycles;
-CREATE PROCEDURE debug_simulation_cycles(IN numCycles INT)
-sp_main: BEGIN
-  DECLARE i INT DEFAULT 0;
-
-  -- Optional: clear out any previous debug info
-  DROP TABLE IF EXISTS sim_debug;
-  CREATE TABLE sim_debug (
-    cycle_num INT,
-    remaining_flights INT,
-    next_event_time TIME
-  );
-
-  WHILE i < numCycles DO
-    -- call the thing under test
-    CALL simulation_cycle();
-
-    -- capture some state after each call
-    INSERT INTO sim_debug
-      (cycle_num,
-       remaining_flights,
-       next_event_time)
-    VALUES
-      (i + 1,
-       (SELECT COUNT(*) FROM flight),
-       (SELECT MIN(next_time) FROM flight));
-
-    SET i = i + 1;
-  END WHILE;
-
-END //
-delimiter ;
-
