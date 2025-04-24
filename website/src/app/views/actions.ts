@@ -27,7 +27,7 @@ export async function getViewData(viewName: string): Promise<any[]> {
       throw new Error(`No route defined for view: ${viewName}`)
     }
 
-    const res = await fetch(`http://127.0.0.1:5000/views/${route}`, { cache: 'no-store' }) // Or 'force-cache' if you want caching
+    const res = await fetch(`http://127.0.0.1:5000/views/${route}`, { cache: 'no-store' })
     if (!res.ok) {
       throw new Error(`Failed to fetch data for ${viewName}`)
     }
@@ -36,6 +36,6 @@ export async function getViewData(viewName: string): Promise<any[]> {
     return data
   } catch (error) {
     console.error('Error fetching data:', error);
-    throw error; // Re-throw to allow the caller to handle the error
+    throw error;
   }
 }

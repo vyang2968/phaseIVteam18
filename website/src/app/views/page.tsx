@@ -20,6 +20,7 @@ import TableSkeleton from '../../components/data-table-skeleton'
 import { toast } from "sonner"
 import { getViewData, getViewNames } from './actions'
 import { ViewName, ViewSchemaFor } from './types'
+import { TableName } from '../crud/utils/types'
 
 export default function Page() {
   const [tableNames, setTableNames] = useState<string[] | null>(null)
@@ -28,9 +29,7 @@ export default function Page() {
     Partial<Record<ViewName, ViewSchemaFor<ViewName>[]>>
   >({})
   const [tabLoading, setTabLoading] = useState(false)
-  const [error, setError] = useState('')
 
-  // 1) Fetch table names
   useEffect(() => {
     const fetchNames = async () => {
       setTabLoading(true)
@@ -42,7 +41,6 @@ export default function Page() {
         }
       } catch (err) {
         console.error(err)
-        setError('Failed to fetch view names')
       } finally {
         setTabLoading(false)
       }
@@ -50,7 +48,6 @@ export default function Page() {
     fetchNames()
   }, [])
 
-  // 2) Fetch data when activeTab changes
   useEffect(() => {
     if (!activeTab) return;
 
@@ -121,7 +118,7 @@ export default function Page() {
                 : tableNames?.map(name => (
                   <TabsContent key={name} value={name}>
                     <DataTable
-                      activeTab={name}
+                      activeTab={name as TableName}
                       data={tableDataMap[name as ViewName] ?? []}
                       actionsEnabled={false}
                     />

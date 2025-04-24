@@ -7,7 +7,6 @@ import {
 import Link from 'next/link';
 
 export default function AppNavigationMenu({ className }: { className: string }) {
-  // A helper function to create the navigation trigger style
   const navigationMenuTriggerStyle = () => {
     return "group inline-flex h-10 w-max items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-slate-100/50 data-[state=open]:bg-slate-100/50";
   };

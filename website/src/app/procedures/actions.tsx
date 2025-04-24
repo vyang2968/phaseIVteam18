@@ -33,7 +33,7 @@ export async function runProcedure(procedureName: ProcedureName, params: Procedu
       throw new Error(result.error);
     }
     
-    return result; // Use the result you already parsed
+    return result;
   } catch (error: any) {
     console.error('Error running procedures:', error?.message || error);
     throw error;
