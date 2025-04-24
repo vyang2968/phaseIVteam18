@@ -206,10 +206,10 @@ export default function AttributesForm<
       if (neoKey in shape) setValue(neoKey, null as any);
     } else if (planeType === 'Airbus') {
       if (modelKey in shape) setValue(modelKey, null as any);
-      if (maintainedKey in shape) setValue(maintainedKey, false as any);
+      if (maintainedKey in shape) setValue(maintainedKey, null as any);
     } else {
       if (modelKey in shape) setValue(modelKey, null as any);
-      if (maintainedKey in shape) setValue(maintainedKey, false as any);
+      if (maintainedKey in shape) setValue(maintainedKey, null as any);
       if (neoKey in shape) setValue(neoKey, null as any);
     }
   }, [planeType, setValue, tableName, shape]);
@@ -255,7 +255,7 @@ export default function AttributesForm<
   }, [personType, shape]);
 
   const injectAndSubmit = (data: z.infer<T>) => {
-    if (tableName === 'airplane' && 'plane_type' in data) {
+    if ('plane_type' in data) {
       const airplaneData = data as unknown as Airplane; 
       const currentPlaneType = airplaneData.plane_type;
       if (currentPlaneType === 'Boeing') {
@@ -269,7 +269,11 @@ export default function AttributesForm<
         if ('neo' in airplaneData) airplaneData.neo = null;
       }
     }
-    console.log("submitting data:", data);
+
+    data = Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [key, value === "" ? null : value])
+    );
+    
     onSubmit(data);
   };
 

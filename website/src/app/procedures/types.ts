@@ -37,7 +37,7 @@ export const OfferFlightSchema = FlightSchema.extend({
   progress: z.number(),
   next_time: z.string().time(),
   cost: z.number()
-})
+}).omit({airplane_status: true})
 
 export const FlightLandingSchema = z.object({
   flightid: z.string().min(1, { message: "Required" })

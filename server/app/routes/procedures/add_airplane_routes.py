@@ -27,9 +27,6 @@ def add_airplane():
             "call add_airplane(%s, %s, %s, %s, %s, %s, %s, %s, %s);",
             (airlineID, tail_num, seat_capacity, speed, locationID, plane_type, maintenanced, model, neo)
             )
-
-        if cursor.rowcount < 1:
-            return jsonify({"error": "No rows affected"}), 500
         
         connection.commit() # Needed because the database is being updated
         

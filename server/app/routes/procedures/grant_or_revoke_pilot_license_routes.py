@@ -12,6 +12,7 @@ def grant_or_revoke_pilot_license():
     try:
         cursor = connection.cursor(dictionary=True)
         data = request.get_json()
+        print(data)
         personID = data.get("personid")
         license = data.get("license")
         cursor.execute(

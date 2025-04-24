@@ -195,6 +195,7 @@ sp_main: begin
     then
 		leave sp_main;
 	end if;
+   
     
 	-- Ensure that the person is a valid pilot
     if not exists (select * from pilot where personID= ip_personID) 
@@ -202,7 +203,7 @@ sp_main: begin
     end if;
     
     -- If license exists, delete it, otherwise add the license
-    if exists (select * from pilot_licenses where license= ip_license) 
+    if exists (select * from pilot_licenses where license = ip_license and personId = ip_personID) 
     then 
 		delete from pilot_licenses where personID= ip_personID and license = ip_license;
     else 
@@ -342,52 +343,68 @@ sp_main: BEGIN
         LEAVE sp_main;
     END IF;
     
-    SELECT routeID, progress
-    INTO flight_routeID, flight_progress
-    FROM flight
-   WHERE flightID = ip_flightID;
-
-  SELECT MAX(sequence) INTO max_progress
-    FROM route_path
-   WHERE routeID = flight_routeID;
-
-  -- 3. Advance to the next leg
-  UPDATE flight
-    SET progress = progress + 1,
-        airplane_status = 'in_flight'
-  WHERE flightID = ip_flightID;
-
-  -- 4. Compute how long that leg takes
-  SELECT distance INTO leg_distance
-    FROM leg
-   WHERE legID = (
-     SELECT legID
-       FROM route_path
-      WHERE routeID = flight_routeID
-        AND sequence = flight_progress + 1
-   );
-  SELECT speed INTO airplane_speed
-    FROM airplane
-    JOIN flight
-      ON (airlineID, tail_num) = (support_airline, support_tail)
-   WHERE flightID = ip_flightID;
-
-  SET flight_time = SEC_TO_TIME(
-    (leg_distance / airplane_speed) * TIME_TO_SEC('01:00:00')
-  );
-
-  -- 5. Schedule the landing
-  SET new_next_time = ADDTIME(
-    (SELECT next_time FROM flight WHERE flightID = ip_flightID),
-    flight_time
-  );
-  SET new_next_time = SEC_TO_TIME(
-    MOD(TIME_TO_SEC(new_next_time), TIME_TO_SEC('24:00:00'))
-  );
-
-  UPDATE flight
-    SET next_time = new_next_time
-  WHERE flightID = ip_flightID;
+    -- Check if flight has another leg to fly
+    SELECT routeID, progress INTO flight_routeID, flight_progress 
+    FROM flight 
+    WHERE flightID = ip_flightID;
+    
+    SELECT MAX(sequence) INTO max_progress 
+    FROM route_path 
+    WHERE routeID = flight_routeID;
+    
+    IF flight_progress >= max_progress THEN
+        LEAVE sp_main;
+    END IF;
+    
+    -- Check for enough pilots
+    SELECT airplane.plane_type INTO plane_type
+    FROM airplane 
+    JOIN flight ON (flight.support_airline, flight.support_tail) = (airplane.airlineID, airplane.tail_num)
+    WHERE flightID = ip_flightID;
+        
+    SELECT COUNT(*) INTO num_assigned_pilots 
+    FROM pilot 
+    WHERE commanding_flight = ip_flightID;
+    
+    -- Delay flight if not enough pilots
+    IF (plane_type = 'Boeing' AND num_assigned_pilots < 2) OR
+       (plane_type IN ('Airbus', 'General') AND num_assigned_pilots < 1) 
+    THEN
+        UPDATE flight 
+        SET next_time = ADDTIME(next_time, '00:30:00') 
+        WHERE flightID = ip_flightID;
+        LEAVE sp_main;
+    END IF;
+    
+    -- Update flight status and progress
+    UPDATE flight 
+    SET progress = progress + 1, 
+        airplane_status = 'in_flight' 
+    WHERE flightID = ip_flightID;
+    
+    -- Calculate flight time and update next_time
+    SELECT speed INTO airplane_speed
+    FROM airplane 
+    JOIN flight ON (flight.support_airline, flight.support_tail) = (airplane.airlineID, airplane.tail_num)
+    WHERE flightID = ip_flightID;
+    
+    SELECT distance INTO leg_distance
+    FROM leg 
+    WHERE legID = (
+        SELECT legID 
+        FROM route_path 
+        WHERE sequence = (SELECT progress FROM flight WHERE flightID = ip_flightID) 
+        AND routeID = flight_routeID
+    );
+    
+    SET flight_time = SEC_TO_TIME(leg_distance / airplane_speed * TIME_TO_SEC('01:00:00'));
+    
+    SET new_next_time = ADDTIME((SELECT next_time FROM flight WHERE flightID = ip_flightID), flight_time);
+    SET new_next_time = SEC_TO_TIME(MOD(TIME_TO_SEC(new_next_time), TIME_TO_SEC('24:00:00')));
+    
+    UPDATE flight 
+    SET next_time = new_next_time 
+    WHERE flightID = ip_flightID;
 END //
 delimiter ;
 
@@ -1088,4 +1105,3 @@ CREATE OR REPLACE VIEW alternative_airports (city , state , country , num_airpor
     GROUP BY city , state , country
     HAVING COUNT(*) > 1;
 delimiter //
-
