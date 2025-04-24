@@ -81,3 +81,30 @@ def delete_passenger(personID):
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
+
+# Update passenger
+@passenger_bp.route('/passengers/<string:personid>', methods=['PATCH'])
+def update_passenger(personid):
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({"error": "Database connection failed"}), 500
+    try:
+        data  = request.get_json()
+        miles = data.get("miles")
+        funds = data.get("funds")
+
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+        """
+            UPDATE passenger
+            SET miles = %s, funds = %s
+            WHERE personID = %s
+        """, 
+        (miles, funds, personid))
+        connection.commit()
+        return jsonify({"message": "Passenger updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release_db_connection(connection)

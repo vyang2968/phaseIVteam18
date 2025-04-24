@@ -38,7 +38,8 @@ def get_airplanes():
 # type into link area and press enter (given that your server is running)
 
 
-@airplane_bp.route('/airplanes/<string:airlineid>/<string:tail_num>', methods=['GET']) # get means get
+# get means get
+@airplane_bp.route('/airplanes/<string:airlineid>/<string:tail_num>', methods=['GET'])
 def get_airplane(airlineid, tail_num):
     # attempts to connect to db server
     connection = get_db_connection()
@@ -57,14 +58,14 @@ def get_airplane(airlineid, tail_num):
         # here we're prone to something called SQL injection where someone can pass in a SQL command as an argument e.g. airlineID
         # cursor.execute(
         #     f"""
-        #         SELECT * 
+        #         SELECT *
         #         FROM airplane
         #         WHERE airlineid = '{airlineID}' and tail_num = '{tail_num}'
         #     """
         # )
 
         # and they can do something like destroy our database
-        
+
         # here's a good way to do it which parameterizes the variables so it's checked/processed first
         # arguments go in order you put them in
         cursor.execute(
@@ -91,7 +92,8 @@ def get_airplane(airlineid, tail_num):
         release_db_connection(connection)
 
 
-@airplane_bp.route('/airplanes/<string:airlineid>/<string:tail_num>', methods=['POST']) # post means action (general)
+# post means action (general)
+@airplane_bp.route('/airplanes/<string:airlineid>/<string:tail_num>', methods=['POST'])
 def create_airplane(airlineid, tail_num):
     # attempts to connect to db server
     connection = get_db_connection()
@@ -102,7 +104,7 @@ def create_airplane(airlineid, tail_num):
     try:
         # json is a way of structuring info into key value pairs
         data = request.get_json()
-        
+
         # grab arguments
         airlineID = data.get("airlineid")
         tail_num = data.get("tail_num")
@@ -113,21 +115,22 @@ def create_airplane(airlineid, tail_num):
         maintenanced = data.get("maintenanced")
         model = data.get("model")
         neo = data.get("neo")
-        
+
         cursor = connection.cursor(dictionary=True)
-        
+
         cursor.execute(
             """
                 INSERT INTO airplane
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (airlineID, tail_num, seat_capacity, speed, locationID, plane_type, maintenanced, model, neo)
+            (airlineID, tail_num, seat_capacity, speed,
+             locationID, plane_type, maintenanced, model, neo)
         )
         # %s means string
-        
+
         # for actions like insert, create, delete, etc., we need to commit our changes
         connection.commit()
-        
+
         # status 200 means good
         return jsonify({"message": "Airplane created successfully"}), 200
     except Exception as e:
@@ -136,7 +139,9 @@ def create_airplane(airlineid, tail_num):
         # Return connection to the pool
         release_db_connection(connection)
 
-@airplane_bp.route('/airplanes/<string:airlineid>/<string:tail_num>', methods=['DELETE']) # delete means delete
+
+# delete means delete
+@airplane_bp.route('/airplanes/<string:airlineid>/<string:tail_num>', methods=['DELETE'])
 def delete_airplane(airlineid, tail_num):
     # attempts to connect to db server
     connection = get_db_connection()
@@ -147,7 +152,7 @@ def delete_airplane(airlineid, tail_num):
     try:
         cursor = connection.cursor(dictionary=True)
         print(airlineid, tail_num)
-        
+
         cursor.execute(
             """
                 DELETE FROM airplane
@@ -155,12 +160,61 @@ def delete_airplane(airlineid, tail_num):
             """,
             (airlineid, tail_num)
         )
-        
+
         # for actions like insert, create, delete, etc., we need to commit our changes
         connection.commit()
-        
+
         # status 200 means good
         return jsonify({"message": "Airplane deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        # Return connection to the pool
+        release_db_connection(connection)
+
+
+# post means action (general)
+@airplane_bp.route('/airplanes/<string:airlineid>/<string:tail_num>', methods=['PATCH'])
+def update_airplane(airlineid, tail_num):
+    # attempts to connect to db server
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    # error safety
+    try:
+        # json is a way of structuring info into key value pairs
+        data = request.get_json()
+
+        # grab arguments
+        airlineID = data.get("airlineid")
+        tail_num = data.get("tail_num")
+        seat_capacity = data.get("seat_capacity")
+        speed = data.get("speed")
+        locationID = data.get("locationid")
+        plane_type = data.get("plane_type")
+        maintenanced = data.get("maintenanced")
+        model = data.get("model")
+        neo = data.get("neo")
+
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+                UPDATE airplane
+                SET seat_capacity = %s, speed = %s, locationID = %s, plane_type = %s, maintenanced = %s, model = %s, neo = %s
+                WHERE airlineID = %s and tail_num = %s
+            """,
+            (seat_capacity, speed, locationID, plane_type,
+             maintenanced, model, neo, airlineID, tail_num)
+        )
+        # %s means string
+
+        # for actions like insert, create, delete, etc., we need to commit our changes
+        connection.commit()
+
+        # status 200 means good
+        return jsonify({"message": "Airplane updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:

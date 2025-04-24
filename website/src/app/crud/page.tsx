@@ -14,14 +14,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { getTableNames, getTableData, deleteTableRow, createTableRow } from './_actions/actions'
+import { getTableNames, getTableData, deleteTableRow, createTableRow, updateTableRow } from './actions'
 import DataTable from '../../components/data-table'
 import { TableSchemaFor, tableSchemaMap, TableName } from './utils/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import TableSkeleton from '../../components/data-table-skeleton'
 import { toast } from "sonner"
-import CreateDialog from './components/create-dialog'
+import AttributesDialog from '../../components/attributes-dialog'
 import { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
 
 export const CreateEditContext =
@@ -121,10 +123,8 @@ export default function Page() {
     }
   }
 
-  const onSubmit = async (data: TableSchemaFor<TableName>) => {
+  const handleCreate = async (data: TableSchemaFor<TableName>) => {
     if (!activeTab) return
-
-    console.log(data)
 
     setActionLoading({ action: "create", loading: true })
 
@@ -147,6 +147,26 @@ export default function Page() {
     }
   }
 
+  const handleEdit = async (data: TableSchemaFor<TableName>) => {
+    if (!activeTab) return
+
+    setActionLoading({ action: "edit", loading: true })
+
+    try {
+      await updateTableRow(activeTab, data)
+      const fresh = await getTableData(activeTab)
+      const normalizedData = (fresh as any[]).map(normalizeKeysToLowercase);
+      setTableDataMap(prev => ({ ...prev, [activeTab]: normalizedData as TableSchemaFor<typeof activeTab>[] }))
+      toast.success(`Row edited in ${activeTab}`)
+    } catch (err: any) {
+      toast.error(`Error editing row`, {
+        description: err.message ?? "Something went wrong",
+      })
+    } finally {
+      setActionLoading({ action: 'edit', loading: false })
+    }
+  }
+
   return (
     <CreateEditContext.Provider
       value={activeTab ? {
@@ -164,12 +184,18 @@ export default function Page() {
               </div>
 
               {activeTab && (
-                <CreateDialog
+                <AttributesDialog
                   loading={actionLoading?.action == 'create' ? actionLoading.loading : false}
                   tableName={activeTab}
                   schema={tableSchemaMap[activeTab]}
-                  defaultValues={{ locationid: null }}
-                  onSubmit={onSubmit}
+                  onSubmit={handleCreate}
+                  trigger={
+                    <Button>
+                      <Plus className="mr-1 h-4 w-4" />
+                      Create
+                    </Button>
+                  }
+                  buttonText='Create'
                 />
               )}
             </div>
@@ -202,6 +228,7 @@ export default function Page() {
                         activeTab={name}
                         data={tableDataMap[name] ?? []}
                         onDelete={handleDelete}
+                        onEdit={(data) => handleEdit(data as TableSchemaFor<TableName>)}
                       />
                     </TabsContent>
                   ))

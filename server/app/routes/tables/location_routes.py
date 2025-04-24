@@ -79,3 +79,17 @@ def delete_location(locationid):
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
+
+# Update location
+@location_bp.route('/locations/<string:locationid>', methods=['PATCH'])
+def update_location(locationid):
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({"error": "Database connection failed"}), 500
+    try:
+        return jsonify({"message": "Nothing to update"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release_db_connection(connection)

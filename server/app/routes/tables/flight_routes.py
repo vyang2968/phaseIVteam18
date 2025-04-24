@@ -98,4 +98,37 @@ def delete_flight(flightid):
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
+        
+# Update flight
+@flight_bp.route('/flights/<string:flightid>', methods=['PATCH'])
+def update_flight(flightid):
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({"error": "Database connection failed"}), 500
+    try:
+        data = request.get_json()
+        flightID = data.get("flightid")
+        routeID = data.get("routeid")
+        support_airline = data.get("support_airline")
+        support_tail = data.get("support_tail")
+        progress = data.get("progress")
+        airplane_status = data.get("airplane_status")
+        next_time = data.get("next_time")
+        cost = data.get("cost")
+        
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            """
+            UPDATE flight
+            SET routeID = %s, support_airline = %s, support_tail = %s, progress = %s, airplane_status = %s, next_time = %s, cost = %s
+            WHERE flightID = %s
+            """,
+            (routeID, support_airline, support_tail, progress, airplane_status, next_time, cost, flightID)
+        )
+        connection.commit()
+        return jsonify({"message": "Flight updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release_db_connection(connection)
 

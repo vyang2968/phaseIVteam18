@@ -18,7 +18,7 @@ def get_passenger_vacationss():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-          release_db_connection(connection)
+        release_db_connection(connection)
 
 # Get one passenger_vacations
 @passenger_vacations_bp.route('/passenger_vacations/<string:personID>/<string:airportID>', methods=['GET'])
@@ -28,7 +28,8 @@ def get_passenger_vacations(personID, airportID):
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM passenger_vacations WHERE personID = %s AND airportID = %s", (personID, airportID))
+        cursor.execute(
+            "SELECT * FROM passenger_vacations WHERE personID = %s AND airportID = %s", (personID, airportID))
         result = cursor.fetchone()
         if result is None:
             return jsonify({"error": "Passenger_vacations not found"}), 404
@@ -64,7 +65,7 @@ def create_passenger_vacations(personID, airportID):
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
-  
+
 
 # Delete passenger_vacations
 @passenger_vacations_bp.route('/passenger_vacations/<string:personID>/<string:sequence>', methods=['DELETE'])
@@ -74,9 +75,36 @@ def delete_passenger_vacations(personID, sequence):
         return jsonify({"error": "Database connection failed"}), 500
     try:
         cursor = connection.cursor(dictionary=True)
-        cursor.execute("DELETE FROM passenger_vacations WHERE personID = %s AND sequence = %s", (personID, sequence))
+        cursor.execute(
+            "DELETE FROM passenger_vacations WHERE personID = %s AND sequence = %s", (personID, sequence))
         connection.commit()
         return jsonify({"message": "Passenger_vacations deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release_db_connection(connection)
+
+# Update passenger_vacations
+@passenger_vacations_bp.route('/passenger_vacations/<string:personid>/<string:airportid>', methods=['PATCH'])
+def update_passenger_vacations(personid, airportid):
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({"error": "Database connection failed"}), 500
+    try:
+        data = request.get_json()
+        sequence = data.get("sequence")
+
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+        """
+            UPDATE passenger_vacations
+            SET sequence = %s
+            WHERE personID  = %s AND airportID = %s
+        """, 
+        (sequence, personid, airportid))
+        connection.commit()
+        return jsonify({"message": "Passenger vacations updated successfully"}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:

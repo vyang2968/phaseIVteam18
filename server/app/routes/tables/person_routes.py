@@ -18,7 +18,7 @@ def get_persons():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-          release_db_connection(connection)
+        release_db_connection(connection)
 
 # Get one person
 @person_bp.route('/persons/<string:personID>', methods=['GET'])
@@ -37,7 +37,7 @@ def get_person(personID):
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
-  
+
 # Create person
 @person_bp.route('/persons/<string:personid>', methods=['POST'])
 def create_person(personid):
@@ -66,7 +66,7 @@ def create_person(personid):
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
-  
+
 
 # Delete person
 @person_bp.route('/persons/<string:personid>', methods=['DELETE'])
@@ -80,6 +80,33 @@ def delete_person(personid):
         cursor.execute("DELETE FROM person WHERE personID = %s", (personid, ))
         connection.commit()
         return jsonify({"message": "Person deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release_db_connection(connection)
+
+# Update person
+@person_bp.route('/persons/<string:personid>', methods=['PATCH'])
+def update_person(personid):
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({"error": "Database connection failed"}), 500
+    try:
+        data = request.get_json()
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        locationID = data.get("locationid")
+
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+        """
+            UPDATE person
+            SET first_name = %s, last_name = %s, locationID = %s
+            WHERE personID = %s
+        """, (first_name, last_name, locationID, personid))
+        connection.commit()
+        return jsonify({"message": "Person updated successfully"}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:

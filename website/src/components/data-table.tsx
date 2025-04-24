@@ -1,3 +1,4 @@
+import { ViewName, ViewSchemaFor } from "@/app/views/types"
 import {
   Table,
   TableBody,
@@ -7,30 +8,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { MoreHorizontal } from "lucide-react"
-import DeleteDialog from "../app/crud/components/delete-dialog"
-import { Airline, Airplane, TableSchemaFor, TableName } from "../app/crud/utils/types"
-import { ViewName, ViewSchemaFor } from "@/app/views/types"
-import { createContext, useContext, useState } from "react"
+import { TableName, TableSchemaFor } from "../app/crud/utils/types"
 import ActionsDropdown from "./actions-dropdown"
+import { z, ZodEffects, ZodObject } from "zod"
 
-type DataTableProps = {
+type ObjectSchema = ZodObject<any> | ZodEffects<ZodObject<any>>
+
+
+type DataTableProps<T extends ObjectSchema> = {
   activeTab: TableName;
   data: TableSchemaFor<TableName>[] | ViewSchemaFor<ViewName>[];
   actionsEnabled: boolean
   onDelete?: (identifiers: Record<string, string>) => void;
+  onEdit: (data: z.infer<T>) => void
 }
 
-export default function DataTable({ data, activeTab, onDelete, actionsEnabled }: DataTableProps) {
+export default function DataTable<T extends ObjectSchema>({ data, activeTab, onDelete, actionsEnabled, onEdit }: DataTableProps<T>) {
   return (
     <Table>
       <TableCaption>{`${(data ?? []).length} records`}</TableCaption>
@@ -78,6 +71,7 @@ export default function DataTable({ data, activeTab, onDelete, actionsEnabled }:
                     row={row as TableSchemaFor<TableName>}
                     activeTab={activeTab}
                     onDelete={onDelete}
+                    onEdit={onEdit}
                   />
               </TableCell>}
             </TableRow>

@@ -1,19 +1,23 @@
+import DeleteDialog from "@/app/crud/components/delete-dialog";
+import { idsFor } from "@/app/crud/utils/ids";
+import { TableName, TableSchemaFor, tableSchemaMap } from "@/app/crud/utils/types";
 import { MoreHorizontal } from "lucide-react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import DeleteDialog from "@/app/crud/components/delete-dialog";
-import { Airline, Airplane, TableName, TableSchemaFor, tableSchemaMap } from "@/app/crud/utils/types";
-import { useState } from "react";
-import EditDialog from "@/app/crud/components/edit-dialog";
-import { idsFor } from "@/app/crud/utils/ids";
+import AttributesDialog from "./attributes-dialog";
+import { z, ZodEffects, ZodObject } from "zod";
 
-interface ActionDropdownProps {
+type ObjectSchema = ZodObject<any> | ZodEffects<ZodObject<any>>
+
+interface ActionDropdownProps<T extends ObjectSchema> {
   activeTab: TableName;
   row: TableSchemaFor<TableName>
   onDelete: (identifiers: Record<string, string>) => void;
+  onEdit: (data: z.infer<T>) => void
 }
 
-export default function ActionsDropdown({ activeTab, row, onDelete }: ActionDropdownProps) {
+export default function ActionsDropdown<T extends ObjectSchema>({ activeTab, row, onDelete, onEdit }: ActionDropdownProps<T>) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
@@ -33,9 +37,14 @@ export default function ActionsDropdown({ activeTab, row, onDelete }: ActionDrop
         >
           Copy
         </DropdownMenuItem>
-        <EditDialog 
-          row={row}
+        <AttributesDialog
+          defaultValues={row}
+          schema={tableSchemaMap[activeTab] as unknown as T}
           tableName={activeTab}
+          loading={false}
+          onSubmit={onEdit}
+          trigger={<DropdownMenuItem >Edit</DropdownMenuItem>}
+          buttonText="Save"
         />
         <DropdownMenuSeparator />
         <DeleteDialog

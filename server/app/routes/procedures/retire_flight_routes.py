@@ -16,7 +16,7 @@ def retire_flight():
         cursor.execute(
             "call retire_flight(%s);",
             (flightID,)
-            )
+        )
 
         connection.commit() # Needed because the database is being updated
         return jsonify({"message": "Flight retired"}), 200

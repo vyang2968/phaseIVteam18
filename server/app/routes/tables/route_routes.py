@@ -79,3 +79,17 @@ def delete_route(routeid):
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
+
+# Update route
+@route_bp.route('/routes/<string:routeid>', methods=['PATCH'])
+def update_route(routeid):
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"error": "Database connection failed"}), 500
+    try:
+        return jsonify({"message": "Nothing to update"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release_db_connection(conn)

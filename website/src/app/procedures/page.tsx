@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getProcedureNames, runProcedure } from './actions';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProcedureName, ProcedureSchemaFor, procedureSchemaMap } from './types';
-import CreateForm from '../crud/components/create-form';
+import AttributesForm from '../../components/attributes-form';
 
 type Procedure = {
   id: string;
@@ -166,7 +166,7 @@ export default function Page() {
                 <DialogTitle>Enter procedure parameters</DialogTitle>
                 <DialogDescription>{'Fill in the following field(s)'}</DialogDescription>
                 {(selectedProcedure && selectedProcedure !== 'simulation_cycle') 
-                  && <CreateForm
+                  && <AttributesForm
                     schema={procedureSchemaMap[selectedProcedure]}
                     defaultValues={{}}
                     loading={isLoading}

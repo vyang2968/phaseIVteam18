@@ -80,5 +80,34 @@ def delete_pilot_licenses(personID, license):
         return jsonify({"error": str(e)}), 500
     finally:
         release_db_connection(connection)
+        
+# Update pilot_licenses
+@pilot_licenses_bp.route(
+    '/pilot_licenses/<string:personid>/<string:license>',
+    methods=['PATCH']
+)
+def update_pilot_licenses(personid, license):
+    connection = get_db_connection()
+    if connection is None:
+        return jsonify({"error": "Database connection failed"}), 500
+    try:
+        data    = request.get_json()
+        new_lic = data.get("license")
+
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+        """
+            UPDATE pilot_licenses
+            SET license = %s
+            WHERE personID = %s AND license  = %s
+        """, 
+        (new_lic, personid, license))
+        connection.commit()
+        return jsonify({"message": "Pilot license updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release_db_connection(connection)
 
   
